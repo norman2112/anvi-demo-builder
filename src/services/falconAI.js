@@ -1,14 +1,19 @@
 const API_URL = import.meta.env.VITE_FALCON_API_URL || 'https://falconai.planview-prod.io/api/v1/chat/completions'
 const MODEL = import.meta.env.VITE_FALCON_MODEL || 'us.anthropic.claude-sonnet-4-5-20250929-v1:0'
 
-/** Hardcoded fallback when nothing is set in Settings (from legacy HTML build). */
+/** In production we call /api/falcon (key server-side). In dev we use localStorage key for local testing. */
+const useFalconProxy = !import.meta.env.DEV
+const FALCON_PROXY_URL = '/api/falcon'
+
+/** Dev-only: fallback when nothing is set in Settings (from legacy HTML build). */
 const FALCON_API_KEY_DEFAULT = 'sk-fe8c2012d8a642819d70a8f59c3367ac'
 
 export function getFalconApiKeyDefault() {
-  return FALCON_API_KEY_DEFAULT || ''
+  return import.meta.env.DEV ? (FALCON_API_KEY_DEFAULT || '') : ''
 }
 
 function getApiKey() {
+  if (!import.meta.env.DEV) return null
   const fromStorage = typeof localStorage !== 'undefined' ? localStorage.getItem('anvi-falcon-api-key') : null
   if (fromStorage && fromStorage.trim()) return fromStorage
   if (FALCON_API_KEY_DEFAULT && FALCON_API_KEY_DEFAULT.trim()) return FALCON_API_KEY_DEFAULT
@@ -21,25 +26,36 @@ function log(...args) {
   if (DEBUG && typeof console !== 'undefined') console.log('[Falcon IA]', ...args)
 }
 
-export async function fetchPlan(payload) {
+/** Single place for Falcon request: proxy in production (no key), direct in dev (with key). */
+async function falconFetch(messages, model = MODEL) {
+  const body = { model, messages }
+  if (useFalconProxy) {
+    const res = await fetch(FALCON_PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    return res
+  }
   const key = getApiKey()
   if (!key || !API_URL) {
     log('Aborted: API key or URL not set. Key present:', !!key, 'URL:', API_URL || '(empty)')
     throw new Error('Falcon API key or URL not set')
   }
-  const body = {
-    model: MODEL,
-    messages: [{ role: 'user', content: JSON.stringify(payload) }],
-  }
-  log('Sending Pass 1 (plan) request to', API_URL, '| payload keys:', Object.keys(payload))
-  if (typeof console !== 'undefined') {
-    console.log('[Falcon IA] Full request body sent to Falcon API:', JSON.stringify(body, null, 2))
-  }
-  const res = await fetch(API_URL, {
+  return fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: JSON.stringify(body),
   })
+}
+
+export async function fetchPlan(payload) {
+  const messages = [{ role: 'user', content: JSON.stringify(payload) }]
+  log('Sending Pass 1 (plan) request', useFalconProxy ? 'via /api/falcon' : 'direct', '| payload keys:', Object.keys(payload))
+  if (typeof console !== 'undefined') {
+    console.log('[Falcon IA] Full request body sent to Falcon API:', JSON.stringify({ model: MODEL, messages }, null, 2))
+  }
+  const res = await falconFetch(messages)
   const responseText = await res.text()
   if (typeof console !== 'undefined') {
     console.log('[Falcon IA] Raw response body from fetch (exactly what Falcon returned):', responseText)
@@ -71,21 +87,9 @@ export async function fetchPlan(payload) {
 }
 
 export async function generateAgents(pass2Payload) {
-  const key = getApiKey()
-  if (!key || !API_URL) {
-    log('Aborted: API key or URL not set. Key present:', !!key, 'URL:', API_URL || '(empty)')
-    throw new Error('Falcon API key or URL not set')
-  }
-  const body = {
-    model: MODEL,
-    messages: [{ role: 'user', content: JSON.stringify(pass2Payload) }],
-  }
-  log('Sending Pass 2 (generate agents) request to', API_URL, '| payload keys:', Object.keys(pass2Payload))
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-    body: JSON.stringify(body),
-  })
+  const messages = [{ role: 'user', content: JSON.stringify(pass2Payload) }]
+  log('Sending Pass 2 (generate agents) request', useFalconProxy ? 'via /api/falcon' : 'direct', '| payload keys:', Object.keys(pass2Payload))
+  const res = await falconFetch(messages)
   const responseText = await res.text()
   if (!res.ok) {
     log('Pass 2 failed:', res.status, res.statusText, '| body:', responseText?.slice(0, 500))
