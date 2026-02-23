@@ -14,7 +14,7 @@ import {
   getPayloadDefaults,
   savePayloadDefaults,
 } from '../../utils/settingsStorage'
-import { getFalconApiKeyDefault } from '../../services/falconAI'
+const isDev = import.meta.env.DEV
 
 function Section({ title, children }) {
   return (
@@ -26,15 +26,19 @@ function Section({ title, children }) {
 }
 
 export default function SettingsPanel({ onClose }) {
+  const url = useConnectionStore((s) => s.url)
+  const token = useConnectionStore((s) => s.token)
   const setUrl = useConnectionStore((s) => s.setUrl)
   const setToken = useConnectionStore((s) => s.setToken)
   const disconnect = useConnectionStore((s) => s.disconnect)
+  const clearCredentials = useConnectionStore((s) => s.clearCredentials)
   const setCompanyContext = useContextStore((s) => s.setCompanyContext)
   const setDemoObjectives = useContextStore((s) => s.setDemoObjectives)
   const tipsVisible = useUiStore((s) => s.tipsVisible)
   const toggleTips = useUiStore((s) => s.toggleTips)
 
   const [falconKey, setFalconKeyState] = useState('')
+  const [devKeyInput, setDevKeyInput] = useState('')
   const [envs, setEnvs] = useState({ environments: [], activeId: null })
   const [newEnvName, setNewEnvName] = useState('')
   const [newEnvUrl, setNewEnvUrl] = useState('')
@@ -45,14 +49,23 @@ export default function SettingsPanel({ onClose }) {
   const [expandedTemplateId, setExpandedTemplateId] = useState(null)
 
   useEffect(() => {
-    setFalconKeyState(getFalconApiKey() || getFalconApiKeyDefault())
+    setFalconKeyState(getFalconApiKey() || '')
     setEnvs(getEnvironments())
     setLibrarySelectedIds(getLibraryDefaultSelectedIds())
     setPayloadTemplates(getPayloadDefaults().templates)
   }, [])
 
-  const handleSaveFalconKey = () => {
-    setFalconApiKey(falconKey)
+  const handleClearFalconKey = () => {
+    setFalconApiKey('')
+    setFalconKeyState('')
+  }
+
+  const handleSetFalconKey = (value) => {
+    const v = (value || '').trim()
+    if (!v) return
+    setFalconApiKey(v)
+    setFalconKeyState(v)
+    setDevKeyInput('')
   }
 
   const handleAddEnvironment = () => {
@@ -154,21 +167,73 @@ export default function SettingsPanel({ onClose }) {
         </Section>
 
         <Section title="Falcon AI">
-          <p className="text-xs text-white/40 mb-2">API key is stored locally and never sent except to your Falcon endpoint.</p>
-          <input
-            type="password"
-            value={falconKey}
-            onChange={(e) => setFalconKeyState(e.target.value)}
-            placeholder="API key"
-            className={`${inputClass} mb-2`}
-          />
-          <button
-            type="button"
-            onClick={handleSaveFalconKey}
-            className="px-4 py-2.5 rounded-lg bg-cta-steel hover:bg-cta-steel-hover text-white text-sm font-medium transition-all duration-150"
-          >
-            Save key
-          </button>
+          {!isDev ? (
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-pv-grass shrink-0" aria-hidden />
+              <span className="text-xs text-white/70">Falcon AI: Configured</span>
+            </div>
+          ) : (falconKey && falconKey.trim()) ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-pv-grass shrink-0" aria-hidden />
+              <span className="text-xs text-white/70">Falcon AI: Key set</span>
+              <button
+                type="button"
+                onClick={handleClearFalconKey}
+                className="text-xs text-white/40 hover:text-white/70 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-flash-red shrink-0" aria-hidden />
+                <span className="text-xs text-white/70">Falcon AI: Not configured</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="password"
+                  value={devKeyInput}
+                  onChange={(e) => setDevKeyInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSetFalconKey(devKeyInput)}
+                  placeholder="API key"
+                  className={`${inputClass} text-xs max-w-[200px] py-1.5`}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleSetFalconKey(devKeyInput)}
+                  className="text-xs text-cta-steel hover:text-white/70 transition-colors"
+                >
+                  Set
+                </button>
+              </div>
+            </div>
+          )}
+        </Section>
+
+        <Section title="Saved credentials">
+          <p className="text-xs text-white/40 mb-2">AgilePlace URL and token used on Step 3. Persisted in this browser so you only enter once.</p>
+          {(url && url.trim()) || (token && token.trim()) ? (
+            <div className="space-y-2">
+              <div className="text-xs text-white/70">
+                <span className="text-white/40">URL: </span>
+                <span className="break-all">{url || '—'}</span>
+              </div>
+              <div className="text-xs text-white/70">
+                <span className="text-white/40">Token: </span>
+                <span>{token && token.length >= 4 ? `••••${token.slice(-4)}` : '••••'}</span>
+              </div>
+              <button
+                type="button"
+                onClick={clearCredentials}
+                className="text-xs text-flash-red/80 hover:text-flash-red transition-colors"
+              >
+                Clear saved credentials
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-white/40">No credentials saved. Enter URL and token on Step 3 (Live Data) to save them here.</p>
+          )}
         </Section>
 
         <Section title="Environments">

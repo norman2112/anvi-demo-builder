@@ -20,11 +20,12 @@ export const useConnectionStore = create(
         // Actual discovery done by agileplace service; store updated from caller
       },
       disconnect: () => set({ isConnected: false, boards: [], error: null }),
+      clearCredentials: () => set({ url: '', token: '', isConnected: false, boards: [], error: null }),
       setUrl: (url) => set({ url }),
       setToken: (token) => set({ token }),
       setConnected: (isConnected, boards = []) => set({ isConnected, boards, error: null }),
       setError: (error) => set({ error, isConnected: false }),
     }),
-    { name: 'anvi-connection-v2', partialize: (s) => ({ url: s.url, token: s.token }) }
+    { name: 'anvi-agileplace-creds', partialize: (s) => ({ url: s.url, token: s.token }) }
   )
 )
