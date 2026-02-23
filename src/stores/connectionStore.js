@@ -4,8 +4,8 @@ import { persist } from 'zustand/middleware'
 export const useConnectionStore = create(
   persist(
     (set, get) => ({
-      url: 'https://your-instance.leankit.com',
-      token: 'REDACTED_AGILEPLACE_TOKEN',
+      url: '',
+      token: '',
       isConnected: false,
       boards: [],
       error: null,
@@ -25,6 +25,6 @@ export const useConnectionStore = create(
       setConnected: (isConnected, boards = []) => set({ isConnected, boards, error: null }),
       setError: (error) => set({ error, isConnected: false }),
     }),
-    { name: 'anvi-connection', partialize: (s) => ({ url: s.url, token: s.token }) }
+    { name: 'anvi-connection-v2', partialize: (s) => ({ url: s.url, token: s.token }) }
   )
 )
