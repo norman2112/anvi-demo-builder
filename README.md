@@ -4,7 +4,7 @@ A modern React application that generates AI-powered demo agents for Planview Ag
 
 ## What It Does
 
-1. **Capture context** — Company details, demo objectives, reference files, live board data
+1. **Capture context** — Company details, demo objectives, supporting files, live board data
 2. **Generate a plan** — Falcon AI analyzes your context and proposes a sequence of demo agents
 3. **Review & customize** — Toggle agents on/off, add notes, adjust the strategy
 4. **Generate agents** — Each agent contains copy-paste Anvi chat prompts with real board IDs, card types, and lane references
@@ -73,10 +73,10 @@ src/
 
 ## 8-Step Workflow
 
-1. **Company Context** — Describe the company, product, and audience
-2. **Reference Files** — Upload RFPs, workflow guides, org charts
-3. **Live Data** — Connect to AgilePlace, select boards
-4. **Context Library** — Select Anvi capability files (AgilePlace / Portfolios)
+1. **Demo Context** — Describe the company, product, and audience
+2. **Supporting Files** — Upload RFPs, workflow guides, org charts
+3. **Planview Live Data** — Connect to AgilePlace, select boards
+4. **Anvi Context** — Select Anvi capability files (AgilePlace / Portfolios)
 5. **Review & Send** — Review payload, send to Falcon AI (Pass 1)
 6. **Plan Review** — Review proposed agents, toggle, add notes, approve
 7. **Generated Agents** — Copy-paste ready Anvi chat prompts (Pass 2)

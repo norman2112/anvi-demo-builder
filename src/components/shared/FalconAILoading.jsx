@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 const PHRASES = [
   'Warming up Falcon AI...',
   'Analyzing your context...',
-  'Reading reference files...',
+  'Reading supporting files...',
   'Checking live data...',
   'Designing agent strategy...',
   'Prioritizing objectives...',

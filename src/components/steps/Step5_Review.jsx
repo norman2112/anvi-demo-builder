@@ -20,7 +20,7 @@ export default function Step5_Review() {
       <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Review & Send</h1>
       <div className="grid grid-cols-2 gap-4">
         <div className="min-h-[500px] p-5 rounded-xl bg-[#141414] border border-white/5 flex flex-col">
-          <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2 shrink-0">Company Context</h2>
+          <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2 shrink-0">Demo Context</h2>
           <p className="text-sm text-white/70 whitespace-pre-wrap leading-relaxed overflow-y-auto flex-1 min-h-0">
             {companyContext || '—'}
           </p>
@@ -32,7 +32,7 @@ export default function Step5_Review() {
           </p>
         </div>
         <div className="p-5 rounded-xl bg-[#141414] border border-white/5">
-          <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Reference Files</h2>
+          <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Supporting Files</h2>
           <p className="text-3xl font-thin text-white">{refFiles.length} file(s)</p>
         </div>
         <div className="p-5 rounded-xl bg-[#141414] border border-white/5">

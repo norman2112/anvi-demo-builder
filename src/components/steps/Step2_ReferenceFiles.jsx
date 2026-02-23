@@ -8,7 +8,7 @@ export default function Step2_ReferenceFiles() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Reference Files</h1>
+      <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Supporting Files</h1>
       <FileUpload onAdd={addRefFile} accept=".pdf,.docx,.txt,.md,image/*" />
       {refFiles.length > 0 && (
         <ul className="space-y-3">

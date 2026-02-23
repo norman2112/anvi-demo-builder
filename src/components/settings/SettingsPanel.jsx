@@ -232,7 +232,7 @@ export default function SettingsPanel({ onClose }) {
               </button>
             </div>
           ) : (
-            <p className="text-xs text-white/40">No credentials saved. Enter URL and token on Step 3 (Live Data) to save them here.</p>
+            <p className="text-xs text-white/40">No credentials saved. Enter URL and token on Step 3 (Planview Live Data) to save them here.</p>
           )}
         </Section>
 
@@ -268,7 +268,7 @@ export default function SettingsPanel({ onClose }) {
           </ul>
         </Section>
 
-        <Section title="Context Library">
+        <Section title="Anvi Context">
           <p className="text-xs text-white/40 mb-2">Default capability files. Toggle which are selected by default when the app loads.</p>
           <ul className="space-y-2">
             {DEFAULT_LIBRARY_FILES.map((f) => (
@@ -315,7 +315,7 @@ export default function SettingsPanel({ onClose }) {
                 </div>
                 {expandedTemplateId === t.id && (
                   <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
-                    <label className="block text-xs font-medium text-white/40 uppercase tracking-widest">Company Context</label>
+                    <label className="block text-xs font-medium text-white/40 uppercase tracking-widest">Demo Context</label>
                     <textarea value={t.companyContext ?? ''} onChange={(e) => handleUpdatePayloadTemplate(t.id, 'companyContext', e.target.value)} className={`${inputClass} min-h-[80px]`} placeholder="Paste or type default company context..." />
                     <label className="block text-xs font-medium text-white/40 uppercase tracking-widest">Demo Objectives</label>
                     <textarea value={t.demoObjectives ?? ''} onChange={(e) => handleUpdatePayloadTemplate(t.id, 'demoObjectives', e.target.value)} className={`${inputClass} min-h-[80px]`} placeholder="Paste or type default demo objectives..." />

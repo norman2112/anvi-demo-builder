@@ -11,9 +11,12 @@ export default function Step1_CompanyContext() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Company Context</h1>
+      <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Demo Context</h1>
+      <p className="text-sm font-light text-white/50 leading-relaxed mb-10 max-w-2xl">
+        Build demo agents in minutes, not hours. Describe your prospect and objectives — Anvi Agent Builder uses Falcon AI to generate a sequence of copy-paste ready Anvi chat prompts tailored to your audience, their pain points, and your live AgilePlace board data. No coding required.
+      </p>
       <div>
-        <label className={labelClass}>Company Context</label>
+        <label className={labelClass}>Demo Context</label>
         <textarea
           value={companyContext}
           onChange={(e) => setCompanyContext(e.target.value)}
