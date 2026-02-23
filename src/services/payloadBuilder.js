@@ -29,7 +29,7 @@ export function validateContextLibraryNoPlaceholders() {
   }
   for (const f of refFiles || []) {
     if (hasPlaceholderContent(f?.content)) {
-      return { valid: false, fileName: f?.name ?? 'Reference file' }
+      return { valid: false, fileName: f?.name ?? 'Supporting file' }
     }
   }
   return { valid: true }

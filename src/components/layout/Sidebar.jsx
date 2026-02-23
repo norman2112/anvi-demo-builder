@@ -10,10 +10,10 @@ import { buildContextPayload } from '../../services/payloadBuilder'
 import { estimateTokens } from '../../utils/tokenEstimator'
 
 const steps = [
-  { num: 1, label: 'Company Context' },
-  { num: 2, label: 'Reference Files' },
-  { num: 3, label: 'Live Data' },
-  { num: 4, label: 'Context Library' },
+  { num: 1, label: 'Demo Context' },
+  { num: 2, label: 'Supporting Files' },
+  { num: 3, label: 'Planview Live Data' },
+  { num: 4, label: 'Anvi Context' },
   { num: 5, label: 'Review & Send' },
   { num: 6, label: 'Plan Review' },
   { num: 7, label: 'Generated Agents' },
@@ -82,11 +82,11 @@ export default function Sidebar() {
     const custom = (payload.customInstructions || '').trim()
 
     return [
-      { label: 'Company Context', complete: cc.length > 0 },
+      { label: 'Demo Context', complete: cc.length > 0 },
       { label: 'Demo Objectives', complete: dobj.length > 0 },
-      { label: 'Reference Files', complete: refCount > 0 },
-      { label: 'Live Data', complete: totalBoards > 0 },
-      { label: 'Context Library', complete: librarySelected > 0 },
+      { label: 'Supporting Files', complete: refCount > 0 },
+      { label: 'Planview Live Data', complete: totalBoards > 0 },
+      { label: 'Anvi Context', complete: librarySelected > 0 },
       { label: 'Custom Instructions', complete: custom.length > 0 },
     ]
   }, [payload, boards.length])

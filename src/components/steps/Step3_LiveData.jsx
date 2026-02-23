@@ -122,7 +122,7 @@ export default function Step3_LiveData() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Live Data</h1>
+      <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Planview Live Data</h1>
 
       {!isConnected ? (
         <div className="space-y-6 max-w-lg">

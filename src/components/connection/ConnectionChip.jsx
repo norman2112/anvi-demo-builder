@@ -12,7 +12,7 @@ export default function ConnectionChip() {
     <button
       type="button"
       onClick={goToStep3}
-      title="Go to Live Data (Step 3)"
+      title="Go to Planview Live Data (Step 3)"
       className={`px-3 py-1 rounded-full transition-all duration-150 ${
         isConnected
           ? 'bg-pv-grass/15 text-pv-grass border border-pv-grass/20 text-sm font-medium'

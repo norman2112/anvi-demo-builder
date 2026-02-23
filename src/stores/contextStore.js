@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware'
 export const useContextStore = create(
   persist(
     (set) => ({
-      companyContext: `Company Context:
+      companyContext: `Demo Context:
 Huntington Bank – Regional banking institution (15,000 employees) serving Midwest markets. Currently using Jira, Rally, and MS Project across 8 product lines with 40+ agile teams.
 
 Key challenges:

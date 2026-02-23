@@ -49,7 +49,7 @@ export default function Step4_ContextLibrary() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Context Library</h1>
+      <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Anvi Context</h1>
       <p className="text-sm text-white/60 leading-relaxed">
         Capability files and custom instructions.
       </p>
