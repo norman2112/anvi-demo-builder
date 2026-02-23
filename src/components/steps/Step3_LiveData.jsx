@@ -22,8 +22,8 @@ export default function Step3_LiveData() {
   const toggleBoard = useBoardStore((s) => s.toggleBoard)
   const setSettingsOpen = useUiStore((s) => s.setSettingsOpen)
 
-  const [localUrl, setLocalUrl] = useState(url)
-  const [localToken, setLocalToken] = useState(token)
+  const [localUrl, setLocalUrl] = useState('')
+  const [localToken, setLocalToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState(null)
   const [savedEnvs, setSavedEnvs] = useState({ environments: [], activeId: null })
@@ -34,14 +34,6 @@ export default function Step3_LiveData() {
   useEffect(() => {
     setSavedEnvs(getEnvironments())
   }, [])
-
-  useEffect(() => {
-    setLocalUrl(url)
-    setLocalToken(token)
-    const { environments, activeId } = getEnvironments()
-    const match = environments.find((e) => e.url === url && e.token === token)
-    setSelectedEnvId(match ? match.id : activeId ?? '')
-  }, [url, token])
 
   const handleConnect = async () => {
     const u = (localUrl || '').trim()
