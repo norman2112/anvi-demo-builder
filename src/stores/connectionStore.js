@@ -4,8 +4,8 @@ import { persist } from 'zustand/middleware'
 export const useConnectionStore = create(
   persist(
     (set, get) => ({
-      url: 'https://scdemo520.leankit.com',
-      token: 'eb985288c32e2491fe81e1e74f9607c0b4631ef6de78805f795325971415f4feaee4fd59fb74a49272e574e9d6a4e3c74abaa745793572f0f3b50ce9fdcc1d79',
+      url: '',
+      token: '',
       isConnected: false,
       boards: [],
       error: null,
@@ -25,6 +25,6 @@ export const useConnectionStore = create(
       setConnected: (isConnected, boards = []) => set({ isConnected, boards, error: null }),
       setError: (error) => set({ error, isConnected: false }),
     }),
-    { name: 'anvi-connection', partialize: (s) => ({ url: s.url, token: s.token }) }
+    { name: 'anvi-connection-v2', partialize: (s) => ({ url: s.url, token: s.token }) }
   )
 )
