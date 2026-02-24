@@ -14,6 +14,7 @@ import {
   getPayloadDefaults,
   savePayloadDefaults,
 } from '../../utils/settingsStorage'
+import { getFalconErrorMessage } from '../../services/falconAI'
 const isDev = import.meta.env.DEV
 
 function Section({ title, children }) {
@@ -47,6 +48,8 @@ export default function SettingsPanel({ onClose }) {
   const [payloadTemplates, setPayloadTemplates] = useState([])
   const [newTemplateName, setNewTemplateName] = useState('')
   const [expandedTemplateId, setExpandedTemplateId] = useState(null)
+  const [falconTestStatus, setFalconTestStatus] = useState('idle') // idle | testing | success | error
+  const [falconTestMessage, setFalconTestMessage] = useState('')
 
   useEffect(() => {
     setFalconKeyState(getFalconApiKey() || '')
@@ -142,6 +145,47 @@ export default function SettingsPanel({ onClose }) {
     setDemoObjectives(t.demoObjectives ?? '')
   }
 
+  const handleTestFalcon = async () => {
+    if (falconTestStatus === 'testing') return
+    setFalconTestStatus('testing')
+    setFalconTestMessage('')
+    try {
+      const res = await fetch('/api/falcon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+          messages: [{ role: 'user', content: 'ping' }],
+          max_tokens: 5,
+        }),
+      })
+      if (!res.ok) {
+        const msg = getFalconErrorMessage(res.status)
+        setFalconTestStatus('error')
+        setFalconTestMessage(msg)
+        setTimeout(() => {
+          setFalconTestStatus('idle')
+          setFalconTestMessage('')
+        }, 5000)
+        return
+      }
+      setFalconTestStatus('success')
+      setFalconTestMessage('Connected ✓')
+      setTimeout(() => {
+        setFalconTestStatus('idle')
+        setFalconTestMessage('')
+      }, 3000)
+    } catch (err) {
+      const msg = 'Falcon AI is unreachable. The service may be down — try again in a few minutes.'
+      setFalconTestStatus('error')
+      setFalconTestMessage(msg)
+      setTimeout(() => {
+        setFalconTestStatus('idle')
+        setFalconTestMessage('')
+      }, 5000)
+    }
+  }
+
   const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white/80 placeholder-white/20 focus:border-cta-steel focus:ring-1 focus:ring-cta-steel/30 focus:outline-none text-sm transition-all duration-150'
   return (
     <div className="h-full flex flex-col bg-[#111111]">
@@ -167,47 +211,70 @@ export default function SettingsPanel({ onClose }) {
         </Section>
 
         <Section title="Falcon AI">
-          {!isDev ? (
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-pv-grass shrink-0" aria-hidden />
-              <span className="text-xs text-white/70">Falcon AI: Configured</span>
-            </div>
-          ) : (falconKey && falconKey.trim()) ? (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="w-2 h-2 rounded-full bg-pv-grass shrink-0" aria-hidden />
-              <span className="text-xs text-white/70">Falcon AI: Key set</span>
-              <button
-                type="button"
-                onClick={handleClearFalconKey}
-                className="text-xs text-white/40 hover:text-white/70 transition-colors"
-              >
-                Clear
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-1.5">
+          <div className="flex items-center gap-3 flex-wrap">
+            {!isDev ? (
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-flash-red shrink-0" aria-hidden />
-                <span className="text-xs text-white/70">Falcon AI: Not configured</span>
+                <span className="w-2 h-2 rounded-full bg-pv-grass shrink-0" aria-hidden />
+                <span className="text-xs text-white/70">Falcon AI: Configured</span>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="password"
-                  value={devKeyInput}
-                  onChange={(e) => setDevKeyInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSetFalconKey(devKeyInput)}
-                  placeholder="API key"
-                  className={`${inputClass} text-xs max-w-[200px] py-1.5`}
-                />
+            ) : (falconKey && falconKey.trim()) ? (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="w-2 h-2 rounded-full bg-pv-grass shrink-0" aria-hidden />
+                <span className="text-xs text-white/70">Falcon AI: Key set</span>
                 <button
                   type="button"
-                  onClick={() => handleSetFalconKey(devKeyInput)}
-                  className="text-xs text-cta-steel hover:text-white/70 transition-colors"
+                  onClick={handleClearFalconKey}
+                  className="px-3 py-1.5 rounded-lg border border-white/10 bg-transparent text-xs text-white/60 hover:text-white hover:border-white/20 transition-colors"
                 >
-                  Set
+                  Clear
                 </button>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-flash-red shrink-0" aria-hidden />
+                  <span className="text-xs text-white/70">Falcon AI: Not configured</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="password"
+                    value={devKeyInput}
+                    onChange={(e) => setDevKeyInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSetFalconKey(devKeyInput)}
+                    placeholder="API key"
+                    className={`${inputClass} text-xs max-w-[200px] py-1.5`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSetFalconKey(devKeyInput)}
+                    className="text-xs text-cta-steel hover:text-white/70 transition-colors"
+                  >
+                    Set
+                  </button>
+                </div>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={handleTestFalcon}
+              className="px-3 py-1.5 rounded-lg border border-white/10 bg-transparent text-xs text-cta-ice hover:text-white hover:border-white/20 cursor-pointer transition-colors disabled:opacity-40"
+              disabled={falconTestStatus === 'testing'}
+            >
+              {falconTestStatus === 'testing' ? 'Testing…' : 'Test'}
+            </button>
+          </div>
+          {falconTestMessage && (
+            <p
+              className={`mt-2 text-xs ${
+                falconTestStatus === 'error'
+                  ? 'text-flash-red/80'
+                  : falconTestStatus === 'success'
+                    ? 'text-pv-grass'
+                    : 'text-white/40'
+              }`}
+            >
+              {falconTestMessage}
+            </p>
           )}
         </Section>
 

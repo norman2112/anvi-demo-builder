@@ -27,7 +27,7 @@ function log(...args) {
 }
 
 /** User-facing message for Falcon HTTP errors */
-function getFalconErrorMessage(status) {
+export function getFalconErrorMessage(status) {
   if (status === 504 || status === 502) return 'Falcon AI timed out. The service may be overloaded — try again shortly.'
   if (status === 401 || status === 403) return 'Falcon AI authentication failed. Check your API key in Settings.'
   if (status === 429) return 'Falcon AI rate limited. Wait a minute and try again.'
@@ -35,7 +35,7 @@ function getFalconErrorMessage(status) {
   return `Falcon AI returned error ${status}.`
 }
 
-const NETWORK_ERROR_MESSAGE = 'Falcon AI is unreachable. The service may be down — try again in a few minutes.'
+export const NETWORK_ERROR_MESSAGE = 'Falcon AI is unreachable. The service may be down — try again in a few minutes.'
 
 /** Single place for Falcon request: proxy in production (no key), direct in dev (with key). */
 async function falconFetch(messages, model = MODEL) {
