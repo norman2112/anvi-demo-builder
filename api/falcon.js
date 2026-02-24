@@ -14,6 +14,8 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 }
 
+export const config = { maxDuration: 60 }
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, corsHeaders).end()
