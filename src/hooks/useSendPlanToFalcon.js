@@ -10,6 +10,7 @@ export function useSendPlanToFalcon() {
   const [sending, setSending] = useState(false)
   const setStep = useUiStore((s) => s.setStep)
   const setPlanLoading = usePlanStore((s) => s.setPlanLoading)
+  const setPlanError = usePlanStore((s) => s.setPlanError)
   const initFromPlan = usePlanStore((s) => s.initFromPlan)
   const setLastSentPlanPayload = usePlanStore((s) => s.setLastSentPlanPayload)
   const setLastFalconPlanResponseText = usePlanStore((s) => s.setLastFalconPlanResponseText)
@@ -24,18 +25,22 @@ export function useSendPlanToFalcon() {
     }
     setSending(true)
     setPlanLoading(true)
+    setPlanError(null)
     try {
       const payload = buildPlanRequestPayload(planPromptText)
       setLastSentPlanPayload(payload)
       if (typeof console !== 'undefined') console.log('[Step5] Send to Falcon: payload built, keys:', Object.keys(payload))
-      setStep(6)
-      const { plan, rawResponseText } = await fetchPlan(payload)
+      const result = await fetchPlan(payload)
+      if (result.error) {
+        setPlanError(result.error)
+        toast.error(result.error)
+        return
+      }
+      const { plan, rawResponseText } = result
       setLastFalconPlanResponseText(rawResponseText ?? '')
       initFromPlan(plan)
+      setStep(6)
       toast.success('Plan loaded. Review and approve to generate.')
-    } catch (err) {
-      const message = err?.message || 'Failed to fetch plan'
-      toast.error(message)
     } finally {
       setSending(false)
       setPlanLoading(false)

@@ -10,7 +10,9 @@ export const usePlanStore = create((set, get) => ({
   agentDecisions: [],
   addedAgents: [],
   isLoading: false,
-  setPlanLoading: (v) => set({ isLoading: !!v }),
+  planError: null,
+  setPlanLoading: (v) => set({ isLoading: !!v, ...(v ? { planError: null } : {}) }),
+  setPlanError: (err) => set({ planError: err ?? null }),
   setLastSentPlanPayload: (payload) => set({ lastSentPlanPayload: payload }),
   setLastFalconPlanResponseText: (text) => set({ lastFalconPlanResponseText: text }),
 

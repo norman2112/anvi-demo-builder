@@ -48,6 +48,7 @@ export default async function handler(req, res) {
       messages,
     }
 
+    // No AbortController/signal — let the request run up to maxDuration (60s); Falcon can take 30–45s for large payloads
     const targetRes = await fetch(FALCON_URL, {
       method: 'POST',
       headers: {
@@ -65,7 +66,7 @@ export default async function handler(req, res) {
     })
     res.end(text)
   } catch (err) {
-    console.error('[api/falcon]', err)
+    console.error('[api/falcon] error:', err?.message, err?.stack, err)
     res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ error: err?.message || 'Falcon proxy error' }))
   }

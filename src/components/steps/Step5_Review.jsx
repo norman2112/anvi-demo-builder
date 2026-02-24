@@ -3,9 +3,14 @@ import { useContextStore } from '../../stores/contextStore'
 import { useConnectionStore } from '../../stores/connectionStore'
 import { useBoardStore } from '../../stores/boardStore'
 import { usePlanStore } from '../../stores/planStore'
+import { useSendPlanToFalcon } from '../../hooks/useSendPlanToFalcon'
+import FalconAILoading from '../shared/FalconAILoading'
 
 export default function Step5_Review() {
   const [payloadOpen, setPayloadOpen] = useState(false)
+  const planLoading = usePlanStore((s) => s.isLoading)
+  const planError = usePlanStore((s) => s.planError)
+  const { send } = useSendPlanToFalcon()
   const companyContext = useContextStore((s) => s.companyContext)
   const demoObjectives = useContextStore((s) => s.demoObjectives)
   const refFiles = useContextStore((s) => s.refFiles)
@@ -14,6 +19,15 @@ export default function Step5_Review() {
   const selected = getSelectedBoards()
   const lastSentPlanPayload = usePlanStore((s) => s.lastSentPlanPayload)
   const lastFalconPlanResponseText = usePlanStore((s) => s.lastFalconPlanResponseText)
+
+  if (planLoading || planError) {
+    return (
+      <div className="space-y-8">
+        <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Review & Send</h1>
+        <FalconAILoading error={planError || undefined} onRetry={send} />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">

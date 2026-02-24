@@ -27,11 +27,13 @@ export default function GeneratedAgentsTab() {
 
   if (!agents?.length) {
     return (
-      <p className="text-med-grey text-sm">
-        {error
-          ? error
-          : 'Generated agents will appear here after Pass 2 (Approve & Generate).'}
-      </p>
+      <div className="text-med-grey text-sm">
+        {error ? (
+          <FalconAILoading error={error} onRetry={undefined} />
+        ) : (
+          <p>Generated agents will appear here after Pass 2 (Approve & Generate).</p>
+        )}
+      </div>
     )
   }
 
