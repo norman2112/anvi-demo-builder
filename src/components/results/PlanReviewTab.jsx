@@ -56,6 +56,14 @@ export default function PlanReviewTab() {
     )
   }
 
+  if (generating || error) {
+    return (
+      <div className="text-med-grey text-sm">
+        <FalconAILoading error={error || undefined} onRetry={handleApprove} />
+      </div>
+    )
+  }
+
   const agents = originalPlan?.agents ?? []
 
   const handleApprove = async () => {
@@ -65,28 +73,29 @@ export default function PlanReviewTab() {
       return
     }
     setError(null)
-    setResultsTab('agents')
     setGenerating(true)
     setLoading(true)
 
-    // Yield so the tab switch and loading UI paint before we start the request
     await new Promise((resolve) => setTimeout(resolve, 0))
 
     try {
       const payload = buildPass2Payload(genPromptText)
       if (typeof console !== 'undefined') console.log('[PlanReview] Approve & Generate: payload built, keys:', Object.keys(payload))
-      const responseText = await generateAgents(payload)
+      const result = await generateAgents(payload)
+      if (typeof result === 'object' && result?.error) {
+        setError(result.error)
+        toast.error(result.error)
+        return
+      }
+      const responseText = typeof result === 'string' ? result : ''
       const agents = parseAgentConfigs(responseText)
-      const validation = validateResponse(responseText, agents)
-      setAgents(agents, validation)
+      const validationResult = validateResponse(responseText, agents)
+      setAgents(agents, validationResult)
       const context = buildContextPayload()
-      const script = generateDemoScript(agents, context, validation)
+      const script = generateDemoScript(agents, context, validationResult)
       setDemoScript(script)
+      setResultsTab('agents')
       toast.success('Agents generated.')
-    } catch (err) {
-      const message = err?.message || 'Generation failed'
-      setError(message)
-      toast.error(message)
     } finally {
       setGenerating(false)
       setLoading(false)

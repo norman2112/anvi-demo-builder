@@ -1,4 +1,5 @@
 import { useResultsStore } from '../../stores/resultsStore'
+import { useUiStore } from '../../stores/uiStore'
 import AgentCard from '../agents/AgentCard'
 import CopyButton from '../shared/CopyButton'
 import FalconAILoading from '../shared/FalconAILoading'
@@ -20,6 +21,7 @@ export default function Step7_GeneratedAgents() {
   const validation = useResultsStore((s) => s.validation)
   const isLoading = useResultsStore((s) => s.isLoading)
   const error = useResultsStore((s) => s.error)
+  const setStep = useUiStore((s) => s.setStep)
 
   if (isLoading) {
     return (
@@ -34,11 +36,13 @@ export default function Step7_GeneratedAgents() {
     return (
       <div className="space-y-6">
         <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Generated Agents</h1>
-        <p className="text-sm text-white/60 leading-relaxed">
-          {error
-            ? error
-            : 'Generated agents will appear here after Pass 2 (Approve & Generate on Plan Review).'}
-        </p>
+        {error ? (
+          <FalconAILoading error={error} onRetry={() => setStep(6)} />
+        ) : (
+          <p className="text-sm text-white/60 leading-relaxed">
+            Generated agents will appear here after Pass 2 (Approve & Generate on Plan Review).
+          </p>
+        )}
       </div>
     )
   }

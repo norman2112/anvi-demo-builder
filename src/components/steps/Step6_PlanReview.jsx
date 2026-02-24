@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { usePlanStore } from '../../stores/planStore'
 import { useUiStore } from '../../stores/uiStore'
+import { useResultsStore } from '../../stores/resultsStore'
+import { usePlanReviewActions } from '../../hooks/usePlanReviewActions'
 import PlanAgentCard from '../plan-review/PlanAgentCard'
 import AddedAgentCard from '../plan-review/AddedAgentCard'
 import FalconAILoading from '../shared/FalconAILoading'
@@ -8,6 +10,8 @@ import FalconAILoading from '../shared/FalconAILoading'
 export default function Step6_PlanReview() {
   const originalPlan = usePlanStore((s) => s.originalPlan)
   const planLoading = usePlanStore((s) => s.isLoading)
+  const generateError = useResultsStore((s) => s.error)
+  const { onApprove, generating } = usePlanReviewActions()
   const strategyNotes = usePlanStore((s) => s.strategyNotes)
   const setStrategyNotes = usePlanStore((s) => s.setStrategyNotes)
   const agentDecisions = usePlanStore((s) => s.agentDecisions)
@@ -37,6 +41,15 @@ export default function Step6_PlanReview() {
             </p>
           )}
         </div>
+      </div>
+    )
+  }
+
+  if (generating || generateError) {
+    return (
+      <div className="space-y-8">
+        <h1 className="text-4xl font-thin text-white tracking-tight shrink-0 mb-8">Plan Review</h1>
+        <FalconAILoading error={generateError || undefined} onRetry={onApprove} />
       </div>
     )
   }

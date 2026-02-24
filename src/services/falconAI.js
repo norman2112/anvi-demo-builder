@@ -26,6 +26,17 @@ function log(...args) {
   if (DEBUG && typeof console !== 'undefined') console.log('[Falcon IA]', ...args)
 }
 
+/** User-facing message for Falcon HTTP errors */
+function getFalconErrorMessage(status) {
+  if (status === 504 || status === 502) return 'Falcon AI timed out. The service may be overloaded — try again shortly.'
+  if (status === 401 || status === 403) return 'Falcon AI authentication failed. Check your API key in Settings.'
+  if (status === 429) return 'Falcon AI rate limited. Wait a minute and try again.'
+  if (status >= 500) return 'Falcon AI internal error. The service may be down.'
+  return `Falcon AI returned error ${status}.`
+}
+
+const NETWORK_ERROR_MESSAGE = 'Falcon AI is unreachable. The service may be down — try again in a few minutes.'
+
 /** Single place for Falcon request: proxy in production (no key), direct in dev (with key). */
 async function falconFetch(messages, model = MODEL) {
   const body = { model, messages }
@@ -55,21 +66,27 @@ export async function fetchPlan(payload) {
   if (typeof console !== 'undefined') {
     console.log('[Falcon IA] Full request body sent to Falcon API:', JSON.stringify({ model: MODEL, messages }, null, 2))
   }
-  const res = await falconFetch(messages)
+  let res
+  try {
+    res = await falconFetch(messages)
+  } catch (e) {
+    log('Pass 1 network error:', e)
+    return { error: NETWORK_ERROR_MESSAGE }
+  }
   const responseText = await res.text()
   if (typeof console !== 'undefined') {
     console.log('[Falcon IA] Raw response body from fetch (exactly what Falcon returned):', responseText)
   }
   if (!res.ok) {
     log('Pass 1 failed:', res.status, res.statusText, '| body:', responseText?.slice(0, 500))
-    throw new Error(`Falcon error: ${res.status}${responseText ? ` — ${responseText.slice(0, 200)}` : ''}`)
+    return { error: getFalconErrorMessage(res.status) }
   }
   let data
   try {
     data = JSON.parse(responseText)
   } catch (e) {
     log('Pass 1 response was not JSON:', responseText?.slice(0, 300))
-    throw new Error('Falcon returned invalid JSON')
+    return { error: 'Falcon returned invalid JSON.' }
   }
   const rawContent = data?.choices?.[0]?.message?.content
   const text = typeof rawContent === 'string'
@@ -89,18 +106,24 @@ export async function fetchPlan(payload) {
 export async function generateAgents(pass2Payload) {
   const messages = [{ role: 'user', content: JSON.stringify(pass2Payload) }]
   log('Sending Pass 2 (generate agents) request', useFalconProxy ? 'via /api/falcon' : 'direct', '| payload keys:', Object.keys(pass2Payload))
-  const res = await falconFetch(messages)
+  let res
+  try {
+    res = await falconFetch(messages)
+  } catch (e) {
+    log('Pass 2 network error:', e)
+    return { error: NETWORK_ERROR_MESSAGE }
+  }
   const responseText = await res.text()
   if (!res.ok) {
     log('Pass 2 failed:', res.status, res.statusText, '| body:', responseText?.slice(0, 500))
-    throw new Error(`Falcon error: ${res.status}${responseText ? ` — ${responseText.slice(0, 200)}` : ''}`)
+    return { error: getFalconErrorMessage(res.status) }
   }
   let data
   try {
     data = JSON.parse(responseText)
   } catch (e) {
     log('Pass 2 response was not JSON:', responseText?.slice(0, 300))
-    throw new Error('Falcon returned invalid JSON')
+    return { error: 'Falcon returned invalid JSON.' }
   }
   const content = data?.choices?.[0]?.message?.content ?? ''
   log('Pass 2 success, response content length:', content?.length ?? 0)

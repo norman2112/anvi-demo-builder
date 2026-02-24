@@ -17,15 +17,35 @@ const PHRASES = [
 const PHRASE_INTERVAL_MS = 5500
 const PROGRESS_DURATION_S = 15
 
-export default function FalconAILoading() {
+export default function FalconAILoading({ error, onRetry }) {
   const [phraseIndex, setPhraseIndex] = useState(0)
 
   useEffect(() => {
+    if (error) return
     const t = setInterval(() => {
       setPhraseIndex((i) => (i + 1) % PHRASES.length)
     }, PHRASE_INTERVAL_MS)
     return () => clearInterval(t)
-  }, [])
+  }, [error])
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4">
+        <p className="text-flash-red/80 text-sm text-center max-w-md mb-4">
+          {error}
+        </p>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="px-4 py-2.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:border-white/20 text-sm font-medium transition-all duration-150"
+          >
+            Try Again
+          </button>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">

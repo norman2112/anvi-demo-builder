@@ -27,7 +27,6 @@ export function usePlanReviewActions() {
       return
     }
     setError(null)
-    setStep(7)
     setGenerating(true)
     setLoading(true)
 
@@ -36,18 +35,21 @@ export function usePlanReviewActions() {
     try {
       const payload = buildPass2Payload(genPromptText)
       if (typeof console !== 'undefined') console.log('[PlanReview] Approve & Generate: payload built, keys:', Object.keys(payload))
-      const responseText = await generateAgents(payload)
+      const result = await generateAgents(payload)
+      if (typeof result === 'object' && result?.error) {
+        setError(result.error)
+        toast.error(result.error)
+        return
+      }
+      const responseText = typeof result === 'string' ? result : ''
       const agents = parseAgentConfigs(responseText)
       const validationResult = validateResponse(responseText, agents)
       setAgents(agents, validationResult)
       const context = buildContextPayload()
       const script = generateDemoScript(agents, context, validationResult)
       setDemoScript(script)
+      setStep(7)
       toast.success('Agents generated.')
-    } catch (err) {
-      const message = err?.message || 'Generation failed'
-      setError(message)
-      toast.error(message)
     } finally {
       setGenerating(false)
       setLoading(false)
