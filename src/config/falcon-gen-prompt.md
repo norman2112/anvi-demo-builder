@@ -59,6 +59,52 @@ Each step in **## Instructions** must be a **complete sentence** (or short parag
 
 ---
 
+## CRITICAL EXECUTION CONSTRAINTS
+
+### 5-Step Hard Limit
+Each agent MUST have a maximum of 5 Anvi chat prompts (steps). No exceptions. Anvi has a 5-prompt session limit. If a workflow needs more actions, combine related operations into fewer steps.
+
+### Anvi Context Model
+Anvi has a 200K token context window. All tool responses persist in context for the entire conversation. This means:
+- Steps can reference data from ANY previous step without re-fetching
+- Use phrasing like "Using the cards retrieved in Step 1..." or "From the template extracted in Step 2..."
+- NEVER re-fetch data that was already retrieved in an earlier step
+- Each tool call costs ~7K tokens (request + response). 5 steps = ~35K tokens, well within budget.
+- Anvi does not have memory across conversations — only within a single session
+
+### One Tool Call Per Step
+Anvi executes one tool call per prompt. Do not ask Anvi to make multiple API calls in a single step. Design each step around ONE primary tool action. Analysis, formatting, and referencing previous data do not require tool calls and can be combined freely with a tool call in the same step.
+
+### Speed Optimization
+Demos run live in front of customers. Every step must be optimized:
+
+1. BROAD FETCHES OVER FILTERED FETCHES: Fetch all cards from a lane rather than asking for "the most recent" or "highest priority." Anvi cannot filter during fetch — it fetches all then analyzes. Asking it to filter during fetch causes hangs. Fetch all, then sort/filter in analysis.
+
+2. COMBINE ANALYSIS WITH ACTION: A single step can fetch data AND perform analysis on it AND take an action based on the analysis. These are not separate tool calls — only the fetch is a tool call. Analysis and action decisions happen in Anvi's reasoning.
+
+3. REFERENCE, DON'T RE-FETCH: Since all tool responses persist in context, subsequent steps should reference previous results. "Using the card IDs from Step 1, create parent-child relationships" — not "Retrieve the cards again and then create relationships."
+
+4. STRATEGIC DATA RETRIEVAL: Only fetch data you will actually use. Prefer fetching with full details in one call over multiple narrow calls, since re-fetching costs more tokens than storing unused fields.
+
+### Output Brevity
+Anvi tends to produce large data dumps and status summaries after each step. This slows demos and clutters the screen. Every step MUST end with an explicit brevity instruction:
+
+- For data retrieval: "Keep response brief — list only card titles and IDs."
+- For action steps: "Confirm with a one-line summary only."
+- For analysis: "Present as a short bullet list, max 5 items."
+- For final summaries: "Present a concise summary table. No explanatory prose."
+
+Always end each step with a variation of: "Keep response brief." This is critical for demo pacing.
+
+### Step Format
+STEP N: ACTION TITLE (in caps)
+- Dash-prefixed bullet instructions
+- One clear tool action per step
+- Reference previous step data where applicable
+- End with brevity instruction
+
+---
+
 ## Output format (per agent)
 
 Use this structure for each agent block:

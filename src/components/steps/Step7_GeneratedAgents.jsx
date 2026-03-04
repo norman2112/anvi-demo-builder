@@ -48,12 +48,13 @@ export default function Step7_GeneratedAgents() {
   }
 
   const fullCopyText = getAllAgentsCopyText(agents)
+  const truncatedCount = agents.filter((a) => a?.truncated).length
 
   return (
     <div className="space-y-6">
       <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Generated Agents</h1>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <StatsBar agentCount={agents.length} />
+        <StatsBar agentCount={agents.length} truncatedCount={truncatedCount} />
         <CopyButton text={fullCopyText} label="Copy all agents" />
       </div>
       {validation && !validation.valid && validation.errors?.length > 0 && (

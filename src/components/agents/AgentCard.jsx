@@ -68,6 +68,11 @@ export default function AgentCard({ agent, index, defaultCollapsed = true }) {
         </span>
         <span className="text-xl font-light text-white truncate flex-1 min-w-0">{name}</span>
         <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {agent?.truncated && (
+            <span className="text-xs text-pv-gold" title="This agent had more than 5 steps and was cut to fit Anvi's limit.">
+              ⚠ Truncated to 5 steps (Anvi limit)
+            </span>
+          )}
           {type && <AgentTypePill type={type} />}
           <button
             type="button"
