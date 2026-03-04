@@ -38,11 +38,12 @@ export default function GeneratedAgentsTab() {
   }
 
   const fullCopyText = getAllAgentsCopyText(agents)
+  const truncatedCount = agents.filter((a) => a?.truncated).length
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <StatsBar agentCount={agents.length} />
+        <StatsBar agentCount={agents.length} truncatedCount={truncatedCount} />
         <CopyButton text={fullCopyText} label="Copy all agents" />
       </div>
       {validation && !validation.valid && validation.errors?.length > 0 && (

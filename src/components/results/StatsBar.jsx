@@ -1,10 +1,16 @@
-export default function StatsBar({ agentCount, ops, time }) {
+export default function StatsBar({ agentCount, ops, time, truncatedCount }) {
   return (
     <div className="flex flex-wrap items-center gap-6 p-4 rounded-xl bg-[#141414] border border-white/5">
       {agentCount != null && (
         <div>
           <p className="text-xs text-white/40 uppercase tracking-widest">Agents</p>
           <p className="text-3xl font-thin text-white">{agentCount}</p>
+        </div>
+      )}
+      {truncatedCount != null && truncatedCount > 0 && (
+        <div>
+          <p className="text-xs text-white/40 uppercase tracking-widest">Truncated</p>
+          <p className="text-3xl font-thin text-pv-gold">{truncatedCount}</p>
         </div>
       )}
       {ops != null && (

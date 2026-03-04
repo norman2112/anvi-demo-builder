@@ -4,8 +4,10 @@
  * - Delimiter format: --- Agent N --- with Name, Type, Purpose, ## Instructions, ## Demo Script, ## Business Value, ## Transition
  * - JSON array or fenced code blocks
  * - Single raw block fallback
+ * - Enforces max 5 Anvi steps per agent (truncates and sets truncated: true)
  */
 
+const MAX_ANVI_STEPS = 5
 const FENCED_BLOCK = /```(?:json)?\s*\n?([\s\S]*?)```/gi
 
 /** Matches --- Agent N --- or --- Agent N --- (optional trailing/leading dashes) */
@@ -22,6 +24,44 @@ function tryParseJson(str) {
 
 function trimBlock(s) {
   return (s ?? '').trim()
+}
+
+/**
+ * Split instructions string into individual steps (Anvi chat prompts).
+ * Handles numbered list (1. ... 2. ...), paragraph breaks, or line-separated.
+ */
+function getSteps(instructions) {
+  if (!instructions?.trim()) return []
+  const trimmed = instructions.trim()
+  const byNumber = trimmed.split(/^\s*\d+\.\s+/m).map((s) => s.trim()).filter(Boolean)
+  if (byNumber.length > 1) return byNumber
+  const byPara = trimmed.split(/\n\n+/).map((s) => s.trim()).filter(Boolean)
+  if (byPara.length > 1) return byPara
+  const byLine = trimmed.split(/\n/).map((s) => s.trim()).filter(Boolean)
+  return byLine.length > 0 ? byLine : [trimmed]
+}
+
+/**
+ * If agent has more than MAX_ANVI_STEPS, truncate to first 5 and set truncated: true.
+ * Rebuilds instructions and raw so stored/copied content is the truncated version.
+ */
+function applyStepCap(agent) {
+  if (agent == null) return agent
+  const steps = getSteps(agent.instructions)
+  if (steps.length <= MAX_ANVI_STEPS) return agent
+  const kept = steps.slice(0, MAX_ANVI_STEPS)
+  const newInstructions = kept.map((s, i) => `${i + 1}. ${s}`).join('\n\n')
+  agent.instructions = newInstructions
+  agent.truncated = true
+  if (typeof agent.raw === 'string' && agent.raw.includes('## Instructions')) {
+    agent.raw = agent.raw.replace(
+      /(^##\s*Instructions\s*\n)[\s\S]*?(?=^##\s|$)/im,
+      (_, head) => `${head}${newInstructions}\n\n`
+    )
+  } else {
+    agent.raw = agent.raw ?? newInstructions
+  }
+  return agent
 }
 
 /**
@@ -81,6 +121,18 @@ function parseDelimiterBlock(block, index) {
 function tryParseDelimiterFormat(text) {
   const parts = text.split(AGENT_BLOCK_DELIMITER)
   // parts[0] may be preamble (warning, intro); parts[1] = "1", parts[2] = block1, parts[3] = "2", parts[4] = block2, ...
+  if (typeof console !== 'undefined') {
+    console.log('[agentParser] tryParseDelimiterFormat: split produced', parts.length, 'parts')
+    if (parts.length > 1) {
+      const delimitersFound = []
+      for (let i = 1; i < parts.length; i += 2) delimitersFound.push(parts[i])
+      console.log('[agentParser] Delimiter numbers detected (Agent N):', delimitersFound)
+      parts.forEach((p, i) => {
+        const preview = typeof p === 'string' ? p.slice(0, 120).replace(/\n/g, '↵') : String(p)
+        console.log(`[agentParser] parts[${i}] (${p?.length ?? 0} chars):`, preview + (p?.length > 120 ? '...' : ''))
+      })
+    }
+  }
   if (parts.length < 2) return null
   const agents = []
   for (let i = 1; i < parts.length; i += 2) {
@@ -125,17 +177,49 @@ export function parseAgentConfigs(responseText) {
 
   const text = responseText.trim()
 
+  if (typeof console !== 'undefined') {
+    console.log('[agentParser] parseAgentConfigs: raw input length', text.length)
+    console.log('[agentParser] Raw input (first 800 chars):', text.slice(0, 800))
+    console.log('[agentParser] Raw input (last 400 chars):', text.slice(-400))
+    const delimCount = (text.match(new RegExp(AGENT_BLOCK_DELIMITER.source, 'gm')) || []).length
+    if (delimCount > 0) {
+      console.log('[agentParser] AGENT_BLOCK_DELIMITER matches in raw text:', delimCount, '- sample contexts:')
+      let count = 0
+      const re = new RegExp(AGENT_BLOCK_DELIMITER.source, 'gim')
+      let m
+      while ((m = re.exec(text)) !== null && count < 5) {
+        const start = Math.max(0, m.index - 40)
+        const end = Math.min(text.length, m.index + m[0].length + 60)
+        console.log(`  [${m[1]}]: "...${text.slice(start, end).replace(/\n/g, '↵')}..."`)
+        count++
+      }
+    }
+  }
+
   // 1) Delimiter format: --- Agent N --- with ## sections
   const delimiterAgents = tryParseDelimiterFormat(text)
-  if (delimiterAgents?.length) return delimiterAgents
+  if (delimiterAgents?.length) {
+    if (typeof console !== 'undefined') {
+      console.log('[agentParser] Using delimiter path: produced', delimiterAgents.length, 'agents')
+      delimiterAgents.forEach((a, i) => {
+        console.log(`[agentParser] Agent ${i + 1}: id=${a.id} name=${JSON.stringify(a.name)} instructionsLen=${a.instructions?.length ?? 0} preview=${(a.instructions ?? '').slice(0, 80).replace(/\n/g, '↵')}...`)
+      })
+    }
+    return delimiterAgents.map(applyStepCap)
+  }
 
   // 2) Try single top-level JSON array
   const parsed = tryParseJson(text)
   if (Array.isArray(parsed)) {
-    return parsed.map((item, i) => normalizeAgent(item, i)).filter(Boolean)
+    if (typeof console !== 'undefined') {
+      console.log('[agentParser] Using JSON array path: parsed length', parsed.length)
+      parsed.slice(0, 3).forEach((item, i) => console.log(`[agentParser] JSON item ${i}:`, typeof item, JSON.stringify(item)?.slice(0, 100)))
+    }
+    return parsed.map((item, i) => applyStepCap(normalizeAgent(item, i))).filter(Boolean)
   }
   if (parsed && typeof parsed === 'object' && Array.isArray(parsed.agents)) {
-    return parsed.agents.map((item, i) => normalizeAgent(item, i)).filter(Boolean)
+    if (typeof console !== 'undefined') console.log('[agentParser] Using JSON.agents path: agents length', parsed.agents.length)
+    return parsed.agents.map((item, i) => applyStepCap(normalizeAgent(item, i))).filter(Boolean)
   }
 
   // 3) Extract fenced code blocks
@@ -149,8 +233,11 @@ export function parseAgentConfigs(responseText) {
 
   if (blocks.length === 0) {
     // 4) No blocks: treat whole response as one agent
-    return [normalizeAgent(text, 0)]
+    if (typeof console !== 'undefined') console.log('[agentParser] Using fallback path: no fenced blocks, treating whole as 1 agent')
+    return [applyStepCap(normalizeAgent(text, 0))]
   }
+
+  if (typeof console !== 'undefined') console.log('[agentParser] Using fenced blocks path:', blocks.length, 'blocks')
 
   const agents = []
   for (let i = 0; i < blocks.length; i++) {
@@ -167,5 +254,7 @@ export function parseAgentConfigs(responseText) {
       else agents.push(normalizeAgent(block, agents.length))
     }
   }
-  return agents
+  const result = agents.map(applyStepCap)
+  if (typeof console !== 'undefined') console.log('[agentParser] Final result:', result.length, 'agents')
+  return result
 }
