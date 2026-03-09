@@ -1,9 +1,11 @@
+import ReactMarkdown from 'react-markdown'
+
 function toKeyActionsList(agent) {
   const raw =
     agent.key_actions ?? agent.keyActions ?? agent['Key Actions'] ?? agent.KeyActions ?? agent.actions ?? []
   if (Array.isArray(raw) && raw.length > 0) return raw.filter((x) => x != null && String(x).trim())
   if (typeof raw === 'string' && raw.trim()) {
-    return raw.split(/[\n,;]+/).map((s) => s.replace(/^\s*[-*•]\s*/, '').trim()).filter(Boolean)
+    return raw.split(/\n+/).map((s) => s.trim()).filter(Boolean)
   }
   return []
 }
@@ -17,6 +19,35 @@ function getPurpose(agent) {
 function getEstimatedTime(agent) {
   const v = agent.estimated_time ?? agent.estimatedTime ?? agent['Estimated Time'] ?? agent.EstimatedTime ?? agent.duration ?? ''
   return (typeof v === 'string' ? v : String(v ?? '')).trim() || '—'
+}
+
+const markdownComponents = {
+  h1: ({ node, ...props }) => <h1 className="text-base font-semibold text-white mt-2 mb-1" {...props} />,
+  h2: ({ node, ...props }) => <h2 className="text-sm font-semibold text-white mt-2 mb-1" {...props} />,
+  h3: ({ node, ...props }) => <h3 className="text-sm font-semibold text-white mt-2 mb-1" {...props} />,
+  p: ({ node, ...props }) => <p className="text-sm text-white/60 mb-2 leading-relaxed" {...props} />,
+  ul: ({ node, ...props }) => (
+    <ul className="list-disc list-inside text-sm text-white/60 mb-2 space-y-1 pl-2" {...props} />
+  ),
+  ol: ({ node, ...props }) => (
+    <ol className="list-decimal list-inside text-sm text-white/60 mb-2 space-y-1 pl-2" {...props} />
+  ),
+  li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
+  strong: ({ node, ...props }) => <strong className="font-semibold text-white/80" {...props} />,
+  code: ({ node, ...props }) => {
+    const text = String(props.children ?? '')
+    const isBlock = text.includes('\n')
+    return isBlock ? (
+      <code className="block p-3 rounded bg-[#0f0f0f] text-white/70 font-mono text-xs overflow-x-auto mb-2 whitespace-pre" {...props} />
+    ) : (
+      <code className="px-1.5 py-0.5 rounded bg-[#0f0f0f] text-cta-ice font-mono text-xs" {...props} />
+    )
+  },
+  pre: ({ node, ...props }) => <pre className="p-0 rounded overflow-x-auto mb-2 my-2" {...props} />,
+  blockquote: ({ node, ...props }) => (
+    <blockquote className="border-l-2 border-cta-steel pl-3 text-white/60 text-sm italic my-2" {...props} />
+  ),
+  a: ({ node, ...props }) => <a className="text-cta-ice hover:underline" {...props} />,
 }
 
 export default function PlanAgentDetailPanel({ agent, notes, onNotesChange, onClose }) {
@@ -47,14 +78,18 @@ export default function PlanAgentDetailPanel({ agent, notes, onNotesChange, onCl
         </div>
         <div>
           <p className="text-xs font-medium text-white/40 uppercase tracking-widest mb-1">Purpose</p>
-          <p className="text-sm text-white/60 whitespace-pre-wrap leading-relaxed">{purpose}</p>
+          <div className="text-sm text-white/60 leading-relaxed">
+            <ReactMarkdown components={markdownComponents}>{purpose}</ReactMarkdown>
+          </div>
         </div>
         <div>
           <p className="text-xs font-medium text-white/40 uppercase tracking-widest mb-1">Key Actions</p>
           {keyActions.length > 0 ? (
             <ul className="list-disc list-inside text-sm text-white/60 space-y-1">
               {keyActions.map((action, i) => (
-                <li key={i}>{action}</li>
+                <li key={i}>
+                  <ReactMarkdown components={markdownComponents}>{action}</ReactMarkdown>
+                </li>
               ))}
             </ul>
           ) : (

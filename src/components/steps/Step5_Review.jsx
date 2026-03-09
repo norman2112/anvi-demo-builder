@@ -21,7 +21,7 @@ export default function Step5_Review() {
   const lastSentPlanPayload = usePlanStore((s) => s.lastSentPlanPayload)
   const lastFalconPlanResponseText = usePlanStore((s) => s.lastFalconPlanResponseText)
   const portfoliosIsConnected = usePortfoliosStore((s) => s.isConnected)
-  const portfoliosInstanceUrl = usePortfoliosStore((s) => s.instanceUrl)
+  const portfoliosInstanceNumber = usePortfoliosStore((s) => s.instanceNumber)
   const portfoliosStrategyCount = usePortfoliosStore((s) => s.strategyCount)
   const portfoliosProjectCount = usePortfoliosStore((s) => s.projectCount)
 
@@ -50,20 +50,36 @@ export default function Step5_Review() {
             {demoObjectives || '—'}
           </p>
         </div>
-        <div className="p-5 rounded-xl bg-[#141414] border border-white/5">
-          <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Supporting Files</h2>
-          <p className="text-3xl font-thin text-white">{refFiles.length} file(s)</p>
-        </div>
-        <div className="p-5 rounded-xl bg-[#141414] border border-white/5">
-          <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Boards</h2>
-          <p className="text-3xl font-thin text-white">{selected.length} of {boards.length} selected</p>
+        <div className="grid grid-cols-4 gap-4 col-span-2">
+          <div className="p-5 rounded-xl bg-[#141414] border border-white/5">
+            <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Supporting Files</h2>
+            <p className="text-3xl font-thin text-white">{refFiles.length} file(s)</p>
+          </div>
+          <div className="p-5 rounded-xl bg-[#141414] border border-white/5">
+            <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Boards</h2>
+            <p className="text-3xl font-thin text-white">
+              {selected.length} of {boards.length} selected
+            </p>
+          </div>
+          <div className="p-5 rounded-xl bg-[#141414] border border-white/5">
+            <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Strategy Items</h2>
+            <p className="text-3xl font-thin text-white">
+              {portfoliosStrategyCount?.toLocaleString?.() ?? portfoliosStrategyCount} item(s)
+            </p>
+          </div>
+          <div className="p-5 rounded-xl bg-[#141414] border border-white/5">
+            <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Projects</h2>
+            <p className="text-3xl font-thin text-white">
+              {portfoliosProjectCount?.toLocaleString?.() ?? portfoliosProjectCount} project(s)
+            </p>
+          </div>
         </div>
         <div className="p-5 rounded-xl bg-[#141414] border border-white/5 col-span-2">
           <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Portfolios Context</h2>
           {portfoliosIsConnected && lastSentPlanPayload?.portfoliosContext ? (
             <>
               <p className="text-sm text-white/60 mb-2">
-                {portfoliosInstanceUrl || 'Instance URL not set'} · {portfoliosStrategyCount} strategy item(s), {portfoliosProjectCount} project(s)
+                {portfoliosInstanceNumber ? `https://scdemo${portfoliosInstanceNumber}.pvcloud.com` : 'Instance not set'} · {portfoliosStrategyCount} strategy item(s), {portfoliosProjectCount} project(s)
               </p>
               <details className="mt-2">
                 <summary className="text-xs text-white/40 cursor-pointer hover:text-white/60">

@@ -1,16 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-const DEFAULT_URL = import.meta.env.VITE_PORTFOLIOS_DEFAULT_URL || ''
-const DEFAULT_USERNAME = import.meta.env.VITE_PORTFOLIOS_DEFAULT_USERNAME || ''
-const DEFAULT_PASSWORD = import.meta.env.VITE_PORTFOLIOS_DEFAULT_PASSWORD || ''
+const DEFAULT_INSTANCE = import.meta.env.VITE_PORTFOLIOS_DEFAULT_INSTANCE || ''
 
 export const usePortfoliosStore = create(
   persist(
     (set) => ({
-      instanceUrl: DEFAULT_URL,
-      username: DEFAULT_USERNAME,
-      password: DEFAULT_PASSWORD,
+      instanceNumber: DEFAULT_INSTANCE,
       isConnected: false,
       lastError: null,
       strategyData: null,
@@ -18,9 +14,7 @@ export const usePortfoliosStore = create(
       strategyCount: 0,
       projectCount: 0,
 
-      setInstanceUrl: (instanceUrl) => set({ instanceUrl }),
-      setUsername: (username) => set({ username }),
-      setPassword: (password) => set({ password }),
+      setInstanceNumber: (instanceNumber) => set({ instanceNumber }),
 
       setConnectionResult: (payload) =>
         set({
@@ -45,11 +39,8 @@ export const usePortfoliosStore = create(
     {
       name: 'anvi-portfolios-connection',
       partialize: (s) => ({
-        instanceUrl: s.instanceUrl,
-        username: s.username,
-        password: s.password,
+        instanceNumber: s.instanceNumber,
       }),
     }
   )
 )
-

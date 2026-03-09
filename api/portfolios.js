@@ -23,11 +23,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { instanceUrl, entity, username, password } = req.body || {}
+    const { instanceNumber, entity } = req.body || {}
 
-    if (!instanceUrl || typeof instanceUrl !== 'string') {
+    const trimmedInstance = (instanceNumber ?? '').toString().trim()
+    if (!trimmedInstance) {
       res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ error: 'instanceUrl is required' }))
+      res.end(JSON.stringify({ error: 'instanceNumber is required' }))
       return
     }
 
@@ -37,15 +38,11 @@ export default async function handler(req, res) {
       return
     }
 
-    if (!username || !password) {
-      res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ error: 'Username and password are required' }))
-      return
-    }
-
-    const base = instanceUrl.replace(/\/$/, '')
+    const base = `https://scdemo${trimmedInstance}.pvcloud.com`.replace(/\/$/, '')
     const url = `${base}/odataservice/odataservice.svc/${encodeURIComponent(entity)}?$format=json`
 
+    const username = 'plt\\odata'
+    const password = 'data'
     const auth = Buffer.from(`${username}:${password}`).toString('base64')
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 30_000)

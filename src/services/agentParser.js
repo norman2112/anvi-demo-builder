@@ -70,14 +70,10 @@ function applyStepCap(agent) {
  * Name: ...
  * Type: ...
  * Purpose: ...
- * ## Instructions
- * ...
+ * [opening paragraphs...]
+ * ## Instructions / ## Steps
  * ## Demo Script
- * ...
- * ## Business Value
- * ...
- * ## Transition
- * ...
+ * ## Business Value / ## Implementation Notes / ## Transition
  */
 function parseDelimiterBlock(block, index) {
   const raw = trimBlock(block)
@@ -85,31 +81,65 @@ function parseDelimiterBlock(block, index) {
 
   const nameMatch = raw.match(/^Name:\s*(.+?)(?=\n[A-Za-z#]|$)/ims)
   const typeMatch = raw.match(/^Type:\s*(.+?)(?=\n[A-Za-z#]|$)/ims)
-  const purposeMatch = raw.match(/^Purpose:\s*(.+?)(?=\n##|\n[A-Z][a-z]+:\s|$)/ims)
-
-  const section = (title) => {
-    const re = new RegExp(`^##\\s*${title}\\s*\\n([\\s\\S]*?)(?=^##\\s|$)`, 'im')
-    const m = raw.match(re)
-    return m ? trimBlock(m[1]) : ''
-  }
+  const explicitPurposeMatch = raw.match(/^Purpose:\s*(.+?)(?=\n##|\n[A-Z][a-z]+:\s|$)/ims)
 
   const name = trimBlock(nameMatch?.[1] ?? '')
   const type = trimBlock(typeMatch?.[1] ?? '')
-  const purpose = trimBlock(purposeMatch?.[1] ?? '')
-  const instructions = section('Instructions')
-  const demoScript = section('Demo Script')
-  const businessValue = section('Business Value')
-  const transition = section('Transition')
+
+  // Split into intro (before first ## heading) and sections (## Heading)
+  const headingRe = /^##\s*(.+?)\s*$/gm
+  const headings = []
+  let m
+  while ((m = headingRe.exec(raw)) !== null) {
+    headings.push({ title: m[1].trim(), index: m.index })
+  }
+
+  let intro = ''
+  const sections = {}
+
+  if (headings.length === 0) {
+    intro = raw
+  } else {
+    intro = raw.slice(0, headings[0].index)
+    for (let i = 0; i < headings.length; i++) {
+      const { title, index: start } = headings[i]
+      const end = i + 1 < headings.length ? headings[i + 1].index : raw.length
+      const body = raw.slice(start + raw.slice(start).indexOf('\n') + 1, end)
+      const key = title.toLowerCase()
+      sections[key] = trimBlock(body)
+    }
+  }
+
+  const openingPurpose = trimBlock(intro)
+  const purpose = trimBlock(explicitPurposeMatch?.[1] ?? openingPurpose) || null
+
+  const instructionsSection =
+    sections['instructions'] ??
+    sections['steps'] ??
+    ''
+
+  const demoScript = sections['demo script'] ?? sections['demoscript'] ?? ''
+
+  const businessValue = sections['business value'] ?? sections['businessvalue'] ?? ''
+  const implementationNotes = sections['implementation notes'] ?? sections['implementationnotes'] ?? ''
+  const transition = sections['transition'] ?? ''
+
+  const notesParts = []
+  if (businessValue) notesParts.push('## Business Value\n' + businessValue)
+  if (implementationNotes) notesParts.push('## Implementation Notes\n' + implementationNotes)
+  if (transition) notesParts.push('## Transition\n' + transition)
+  const notes = notesParts.join('\n\n')
 
   return {
     id: `agent-${index + 1}`,
     name: name || `Agent ${index + 1}`,
     type: type || null,
-    purpose: purpose || null,
-    instructions: instructions || raw,
+    purpose,
+    instructions: instructionsSection || raw,
     demoScript: demoScript || '',
     businessValue: businessValue || '',
     transition: transition || '',
+    notes,
     raw,
   }
 }

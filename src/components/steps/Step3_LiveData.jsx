@@ -32,12 +32,8 @@ export default function Step3_LiveData() {
   const [showSaveEnvPrompt, setShowSaveEnvPrompt] = useState(false)
   const [saveEnvName, setSaveEnvName] = useState('')
 
-  const portfoliosInstanceUrl = usePortfoliosStore((s) => s.instanceUrl)
-  const portfoliosUsername = usePortfoliosStore((s) => s.username)
-  const portfoliosPassword = usePortfoliosStore((s) => s.password)
-  const setPortfoliosInstanceUrl = usePortfoliosStore((s) => s.setInstanceUrl)
-  const setPortfoliosUsername = usePortfoliosStore((s) => s.setUsername)
-  const setPortfoliosPassword = usePortfoliosStore((s) => s.setPassword)
+  const portfoliosInstanceNumber = usePortfoliosStore((s) => s.instanceNumber)
+  const setPortfoliosInstanceNumber = usePortfoliosStore((s) => s.setInstanceNumber)
   const portfoliosIsConnected = usePortfoliosStore((s) => s.isConnected)
   const setPortfoliosConnectionResult = usePortfoliosStore((s) => s.setConnectionResult)
   const disconnectPortfolios = usePortfoliosStore((s) => s.disconnect)
@@ -154,28 +150,36 @@ export default function Step3_LiveData() {
       ? 'error'
       : 'idle'
 
-  const handlePortfoliosTestConnection = async () => {
-    const instance = (portfoliosInstanceUrl || '').trim()
-    const user = (portfoliosUsername || '').trim()
-    const pass = (portfoliosPassword || '').trim()
-    if (!instance || !user || !pass) {
-      setPortfoliosStatus('Instance URL, username, and password are required.')
-      setPortfoliosConnectionResult({ isConnected: false, error: 'Instance URL, username, and password are required.' })
+  const handlePortfoliosConnect = async () => {
+    const instanceNumber = (portfoliosInstanceNumber || '').trim()
+    if (!instanceNumber) {
+      setPortfoliosStatus('Instance number is required.')
+      setPortfoliosConnectionResult({ isConnected: false, error: 'Instance number is required.' })
       return
     }
     setPortfoliosLoading(true)
-    setPortfoliosStatus('Testing connection…')
+    setPortfoliosStatus('Connecting…')
     setPortfoliosConnectionResult({ isConnected: false, error: null })
     try {
-      const basePayload = { instanceUrl: instance, username: user, password: pass }
+      const basePayload = { instanceNumber }
       const stratRes = await fetch('/api/portfolios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...basePayload, entity: 'Strategy_Dimension' }),
       })
-      const stratBody = await stratRes.json()
-      if (!stratRes.ok) {
-        const msg = stratBody?.error || 'Connection failed'
+      const stratText = await stratRes.text()
+      let stratBody = null
+      try {
+        stratBody = stratText ? JSON.parse(stratText) : null
+      } catch (e) {
+        console.error('[Step3 Portfolios] Failed to parse Strategy_Dimension JSON', e, stratText)
+      }
+      if (!stratRes.ok || !stratBody) {
+        const msg =
+          (stratBody && stratBody.error) ||
+          (stratText && stratText.trim() && !stratText.trim().startsWith('<')
+            ? stratText.trim()
+            : 'Connection failed')
         setPortfoliosConnectionResult({ isConnected: false, error: msg })
         setPortfoliosStatus(msg)
         toast.error(msg)
@@ -186,9 +190,19 @@ export default function Step3_LiveData() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...basePayload, entity: 'PortfolioDashboards_Project_Dimension' }),
       })
-      const projBody = await projRes.json()
-      if (!projRes.ok) {
-        const msg = projBody?.error || 'Project fetch failed'
+      const projText = await projRes.text()
+      let projBody = null
+      try {
+        projBody = projText ? JSON.parse(projText) : null
+      } catch (e) {
+        console.error('[Step3 Portfolios] Failed to parse PortfolioDashboards_Project_Dimension JSON', e, projText)
+      }
+      if (!projRes.ok || !projBody) {
+        const msg =
+          (projBody && projBody.error) ||
+          (projText && projText.trim() && !projText.trim().startsWith('<')
+            ? projText.trim()
+            : 'Project fetch failed')
         setPortfoliosConnectionResult({ isConnected: false, error: msg, strategyData: stratBody })
         setPortfoliosStatus(msg)
         toast.error(msg)
@@ -215,8 +229,8 @@ export default function Step3_LiveData() {
         projectCount: projectItems.length,
       })
       const totalStrategies = strategyItems.length
-      setPortfoliosStatus(`Connected — ${totalStrategies} strategy item(s) found`)
-      toast.success('Connected to Portfolios')
+      setPortfoliosStatus(`Connected to scdemo${instanceNumber} — ${totalStrategies} strategy item(s), ${projectItems.length} project(s) loaded`)
+      toast.success(`Connected to scdemo${instanceNumber}`)
     } catch (err) {
       console.error('[Step3 Portfolios] Error testing connection', err)
       const message = err?.message || 'Could not reach Portfolios instance'
@@ -313,7 +327,7 @@ export default function Step3_LiveData() {
         <>
           {!isConnected ? (
             <div className="space-y-6 max-w-lg">
-              <p className="text-sm text-white/60 leading-relaxed">Connect to AgilePlace to discover boards and use live data in your demo.</p>
+            <p className="text-sm text-white/60 leading-relaxed">Connect to AgilePlace to discover boards and use live data in your demo.</p>
 
               <div>
                 <label className={labelClass}>Saved Environment or New Connection</label>
@@ -471,47 +485,28 @@ export default function Step3_LiveData() {
             </p>
 
             <div>
-              <label className={labelClass}>Instance URL</label>
-              <input
-                type="url"
-                value={portfoliosInstanceUrl}
-                onChange={(e) => setPortfoliosInstanceUrl(e.target.value)}
-                placeholder="https://scdemo520.pvcloud.com"
-                className={inputClass}
-                disabled={portfoliosLoading}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Username</label>
+              <label className={labelClass}>Instance Number</label>
               <input
                 type="text"
-                value={portfoliosUsername || 'plt\\odata'}
-                onChange={(e) => setPortfoliosUsername(e.target.value)}
-                placeholder="plt\\odata"
-                className={inputClass}
+                value={portfoliosInstanceNumber}
+                onChange={(e) => setPortfoliosInstanceNumber(e.target.value)}
+                placeholder="520"
+                className={`${inputClass} max-w-[140px]`}
                 disabled={portfoliosLoading}
               />
-            </div>
-            <div>
-              <label className={labelClass}>Password</label>
-              <input
-                type="password"
-                value={portfoliosPassword || 'data'}
-                onChange={(e) => setPortfoliosPassword(e.target.value)}
-                placeholder="Password"
-                className={inputClass}
-                disabled={portfoliosLoading}
-              />
+              <p className="text-xs text-white/40 mt-1">
+                Enter your scdemo instance number (e.g. 520 for scdemo520).
+              </p>
             </div>
 
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={handlePortfoliosTestConnection}
+                onClick={handlePortfoliosConnect}
                 disabled={portfoliosLoading}
                 className="px-6 py-2.5 rounded-lg bg-cta-steel hover:bg-cta-steel-hover text-white font-medium disabled:opacity-50 transition-all duration-150 hover:scale-[1.01]"
               >
-                {portfoliosLoading ? 'Testing…' : 'Test Connection'}
+                {portfoliosLoading ? 'Connecting…' : 'Connect'}
               </button>
               {portfoliosIsConnected && (
                 <button
@@ -545,7 +540,7 @@ export default function Step3_LiveData() {
             </div>
 
             {!portfoliosIsConnected || !portfoliosStrategyData || !portfoliosProjectData ? (
-              <div className="flex items-center justify-center h-full min-h-[180px] rounded-xl border border-dashed border-white/10 -m-4">
+              <div className="flex items-center justify-center h-full min-h-[180px]">
                 <p className="text-xs text-white/40 text-center px-6">
                   Connect to see a preview of your Portfolios data.
                 </p>

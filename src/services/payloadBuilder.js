@@ -55,8 +55,11 @@ export function buildContextPayload() {
         ? [strategy.text || '', projects.text || ''].filter(Boolean).join('\n\n')
         : ''
 
+    const instanceNumber = portfolios.instanceNumber || ''
+    const instanceUrl = instanceNumber ? `https://scdemo${instanceNumber}.pvcloud.com` : ''
+
     portfoliosContext = {
-      instanceUrl: portfolios.instanceUrl || '',
+      instanceUrl,
       strategyItemsCount: strategy.count,
       projectItemsCount: projects.count,
       text: fullText,

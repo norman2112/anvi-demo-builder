@@ -90,7 +90,7 @@ export default function AgentCard({ agent, index, defaultCollapsed = true }) {
       {!collapsed && (
         <div className="border-t border-white/5 p-5">
           <p className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Anvi Agent Steps</p>
-          <div className="bg-[#0f0f0f] rounded-lg p-4 font-mono text-xs text-white/60 leading-relaxed overflow-auto">
+          <div className="bg-[#0f0f0f] rounded-lg p-4 text-sm text-white/60 leading-relaxed overflow-auto font-anvi-serif">
             <AgentInstructions text={content} highlightIds />
           </div>
         </div>
