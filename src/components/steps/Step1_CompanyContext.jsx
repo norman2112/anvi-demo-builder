@@ -27,6 +27,35 @@ Demonstrate SAFe PI Planning at scale:
 
 Success criteria: They see how AgilePlace eliminates the "sticky note wall" chaos and provides digital PI Planning board with real-time updates.`
 
+const PREFILL_SPM_CONTEXT = `Company Context:
+Huntington National Bank — $200B+ asset regional bank, HQ Columbus OH. 
+Key exec audience: SVP of Enterprise PMO (reports to CIO).
+
+Huntington runs a centralized EPMO managing 400+ active projects across 
+Digital Banking, Commercial Lending, Risk & Compliance, and Infrastructure 
+Modernization. They use Planview Portfolios for strategic planning and 
+project intake. Current pain: manual weekly status rollups take the PMO 
+team 6+ hours every Monday. CIO wants real-time strategy-to-execution 
+visibility without the spreadsheet heroics.
+
+Recent strategic priorities:
+- Digital-first customer experience (mobile banking overhaul)
+- AI/ML fraud detection and credit decisioning
+- Core banking platform modernization (mainframe migration)
+- Regulatory compliance automation (OCC/Fed requirements)
+- Branch network optimization and hybrid workforce enablement
+
+Target demo persona: SVP of Enterprise PMO + Director of Portfolio Analytics
+Demo tone: Executive, data-driven, ROI-focused. No fluff.`
+
+const PREFILL_SPM_OBJECTIVES = `Demo Objectives:
+Show Huntington's EPMO leadership how Anvi + Portfolios can:
+1. Auto-generate executive strategy briefings from live portfolio data
+2. Surface at-risk initiatives before they hit the CIO's desk
+3. Demonstrate strategy-to-execution traceability (strategic themes → projects → board work)
+4. Replace manual Monday morning status compilation with one-click agent runs
+5. Prove AI can understand their portfolio hierarchy and speak in banking terms`
+
 export default function Step1_CompanyContext() {
   const companyContext = useContextStore((s) => s.companyContext)
   const setCompanyContext = useContextStore((s) => s.setCompanyContext)
@@ -36,6 +65,11 @@ export default function Step1_CompanyContext() {
   const handlePrefillDemo = () => {
     setCompanyContext(PREFILL_DEMO_CONTEXT)
     setDemoObjectives(PREFILL_DEMO_OBJECTIVES)
+  }
+
+  const handlePrefillSpmDemo = () => {
+    setCompanyContext(PREFILL_SPM_CONTEXT)
+    setDemoObjectives(PREFILL_SPM_OBJECTIVES)
   }
 
   return (
@@ -65,13 +99,22 @@ export default function Step1_CompanyContext() {
         />
       </div>
       <div className="pt-2">
-        <button
-          type="button"
-          onClick={handlePrefillDemo}
-          className="px-4 py-2.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:border-white/20 text-sm font-medium transition-all duration-150"
-        >
-          Prefill demo data
-        </button>
+        <div className="flex justify-end gap-4 text-xs">
+          <button
+            type="button"
+            onClick={handlePrefillDemo}
+            className="text-white/30 hover:text-white/60 underline underline-offset-2 transition-colors duration-150"
+          >
+            Prefill DPD Demo Context
+          </button>
+          <button
+            type="button"
+            onClick={handlePrefillSpmDemo}
+            className="text-white/30 hover:text-white/60 underline underline-offset-2 transition-colors duration-150"
+          >
+            Prefill SPM Demo Context
+          </button>
+        </div>
       </div>
     </div>
   )
