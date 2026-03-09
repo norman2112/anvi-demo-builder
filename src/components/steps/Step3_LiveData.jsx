@@ -44,6 +44,8 @@ export default function Step3_LiveData() {
   const portfoliosStrategyCount = usePortfoliosStore((s) => s.strategyCount)
   const portfoliosProjectCount = usePortfoliosStore((s) => s.projectCount)
   const portfoliosLastError = usePortfoliosStore((s) => s.lastError)
+  const portfoliosStrategyData = usePortfoliosStore((s) => s.strategyData)
+  const portfoliosProjectData = usePortfoliosStore((s) => s.projectData)
 
   const [activeTab, setActiveTab] = useState('agileplace')
   const [portfoliosLoading, setPortfoliosLoading] = useState(false)
@@ -229,6 +231,51 @@ export default function Step3_LiveData() {
   const handlePortfoliosDisconnect = () => {
     disconnectPortfolios()
     setPortfoliosStatus(null)
+  }
+
+  const getStrategyItemsForPreview = () => {
+    const raw = portfoliosStrategyData
+    if (!raw) return []
+    const list = Array.isArray(raw?.value)
+      ? raw.value
+      : Array.isArray(raw?.d?.results)
+        ? raw.d.results
+        : Array.isArray(raw?.d)
+          ? raw.d
+          : Array.isArray(raw)
+            ? raw
+            : []
+    const byCode = new Map()
+    for (const item of list) {
+      const code = String(item.strategy_code ?? '').trim()
+      if (!code || byCode.has(code)) continue
+      byCode.set(code, item)
+    }
+    return Array.from(byCode.values())
+      .filter((item) => Number(item.depth ?? 0) > 0)
+      .slice(0, 10)
+  }
+
+  const getProjectItemsForPreview = () => {
+    const raw = portfoliosProjectData
+    if (!raw) return []
+    const list = Array.isArray(raw?.value)
+      ? raw.value
+      : Array.isArray(raw?.d?.results)
+        ? raw.d.results
+        : Array.isArray(raw?.d)
+          ? raw.d
+          : Array.isArray(raw)
+            ? raw
+            : []
+    const filtered = list.filter((item) => {
+      const wbs02 = String(item.WBS02 ?? '').toLowerCase()
+      const name = String(item.Project_Name ?? '').toLowerCase()
+      if (wbs02.includes('archived') || wbs02.includes('test data') || wbs02.includes('templates')) return false
+      if (name.includes('test') || name.includes('template')) return false
+      return true
+    })
+    return filtered.slice(0, 8)
   }
 
   return (
@@ -417,76 +464,165 @@ export default function Step3_LiveData() {
       )}
 
       {activeTab === 'portfolios' && (
-        <div className="space-y-6 max-w-lg">
-          <p className="text-sm text-white/60 leading-relaxed">
-            Connect to Planview Portfolios to pull strategic planning and project portfolio context into the Falcon payload.
-          </p>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <p className="text-sm text-white/60 leading-relaxed">
+              Connect to Planview Portfolios to pull strategic planning and project portfolio context into the Falcon payload.
+            </p>
 
-          <div>
-            <label className={labelClass}>Instance URL</label>
-            <input
-              type="url"
-              value={portfoliosInstanceUrl}
-              onChange={(e) => setPortfoliosInstanceUrl(e.target.value)}
-              placeholder="https://scdemo520.pvcloud.com"
-              className={inputClass}
-              disabled={portfoliosLoading}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Username</label>
-            <input
-              type="text"
-              value={portfoliosUsername}
-              onChange={(e) => setPortfoliosUsername(e.target.value)}
-              placeholder="plt\\odata"
-              className={inputClass}
-              disabled={portfoliosLoading}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Password</label>
-            <input
-              type="password"
-              value={portfoliosPassword}
-              onChange={(e) => setPortfoliosPassword(e.target.value)}
-              placeholder="Password"
-              className={inputClass}
-              disabled={portfoliosLoading}
-            />
-          </div>
+            <div>
+              <label className={labelClass}>Instance URL</label>
+              <input
+                type="url"
+                value={portfoliosInstanceUrl}
+                onChange={(e) => setPortfoliosInstanceUrl(e.target.value)}
+                placeholder="https://scdemo520.pvcloud.com"
+                className={inputClass}
+                disabled={portfoliosLoading}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Username</label>
+              <input
+                type="text"
+                value={portfoliosUsername}
+                onChange={(e) => setPortfoliosUsername(e.target.value)}
+                placeholder="plt\\odata"
+                className={inputClass}
+                disabled={portfoliosLoading}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Password</label>
+              <input
+                type="password"
+                value={portfoliosPassword}
+                onChange={(e) => setPortfoliosPassword(e.target.value)}
+                placeholder="Password"
+                className={inputClass}
+                disabled={portfoliosLoading}
+              />
+            </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handlePortfoliosTestConnection}
-              disabled={portfoliosLoading}
-              className="px-6 py-2.5 rounded-lg bg-cta-steel hover:bg-cta-steel-hover text-white font-medium disabled:opacity-50 transition-all duration-150 hover:scale-[1.01]"
-            >
-              {portfoliosLoading ? 'Testing…' : 'Test Connection'}
-            </button>
-            {portfoliosIsConnected && (
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={handlePortfoliosDisconnect}
-                className="text-sm text-white/40 hover:text-white/70 transition-all duration-150"
+                onClick={handlePortfoliosTestConnection}
+                disabled={portfoliosLoading}
+                className="px-6 py-2.5 rounded-lg bg-cta-steel hover:bg-cta-steel-hover text-white font-medium disabled:opacity-50 transition-all duration-150 hover:scale-[1.01]"
               >
-                Disconnect
+                {portfoliosLoading ? 'Testing…' : 'Test Connection'}
               </button>
+              {portfoliosIsConnected && (
+                <button
+                  type="button"
+                  onClick={handlePortfoliosDisconnect}
+                  className="text-sm text-white/40 hover:text-white/70 transition-all duration-150"
+                >
+                  Disconnect
+                </button>
+              )}
+            </div>
+
+            {(portfoliosStatus || portfoliosLastError) && (
+              <p className={`text-sm ${portfoliosLastError ? 'text-flash-red' : 'text-white/60'}`}>
+                {portfoliosLastError || portfoliosStatus}
+              </p>
+            )}
+
+            {portfoliosIsConnected && (
+              <p className="text-xs text-white/40">
+                {portfoliosStrategyCount} strategy item(s), {portfoliosProjectCount} project(s) loaded.
+              </p>
             )}
           </div>
 
-          {(portfoliosStatus || portfoliosLastError) && (
-            <p className={`text-sm ${portfoliosLastError ? 'text-flash-red' : 'text-white/60'}`}>
-              {portfoliosLastError || portfoliosStatus}
-            </p>
-          )}
+          <div className="rounded-xl bg-[#141414] border border-white/5 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest">
+                Data Preview
+              </h2>
+            </div>
 
-          {portfoliosIsConnected && (
-            <p className="text-xs text-white/40">
-              {portfoliosStrategyCount} strategy item(s), {portfoliosProjectCount} project(s) loaded.
-            </p>
-          )}
+            {!portfoliosIsConnected || !portfoliosStrategyData || !portfoliosProjectData ? (
+              <div className="flex items-center justify-center h-full min-h-[180px] rounded-lg border border-dashed border-white/10">
+                <p className="text-xs text-white/40 text-center px-4">
+                  Connect to see a preview of your Portfolios data.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-white/50 uppercase tracking-widest mb-2">
+                    Strategy Hierarchy
+                  </p>
+                  <div className="bg-[#101010] rounded-lg p-3 max-h-[250px] overflow-y-auto space-y-1">
+                    {getStrategyItemsForPreview().map((item, idx) => {
+                      const depth = Number(item.depth ?? 0) || 0
+                      const code = String(item.strategy_code ?? '').trim()
+                      let name = ''
+                      if (depth >= 1 && depth <= 7) {
+                        const key = `Strategy_L${depth}`
+                        name = String(item[key] ?? '').trim()
+                      }
+                      if (!name) {
+                        name = String(item.Strategy_Description ?? '').trim()
+                      }
+                      const indent = depth > 1 ? (depth - 1) * 12 : 0
+                      const colorClass = depth <= 2 ? 'text-white/80' : 'text-white/40'
+                      const label = [name || '(unnamed)', code ? `(${code})` : ''].filter(Boolean).join(' ')
+                      return (
+                        <div
+                          key={code || idx}
+                          className={`text-xs ${colorClass}`}
+                          style={{ marginLeft: `${indent}px` }}
+                        >
+                          {label}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p className="mt-1 text-[11px] text-white/30">
+                    {portfoliosStrategyCount} total strategy items
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-white/50 uppercase tracking-widest mb-2">
+                    Projects
+                  </p>
+                  <div className="bg-[#101010] rounded-lg p-3 max-h-[250px] overflow-y-auto space-y-1">
+                    {getProjectItemsForPreview().map((item, idx) => {
+                      const name = String(item.Project_Name ?? '').trim() || '(Unnamed project)'
+                      const lifecycle = String(item.Lifecycle_Stage ?? '').trim()
+                      const overall = String(item.Overall_Status_Assessment ?? '').trim().toLowerCase()
+                      let statusColor = 'bg-white/30'
+                      if (overall.includes('green')) statusColor = 'bg-pv-grass'
+                      else if (overall.includes('yellow') || overall.includes('amber')) statusColor = 'bg-yellow-400'
+                      else if (overall.includes('red')) statusColor = 'bg-flash-red'
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between gap-2 text-xs text-white/70"
+                        >
+                          <span className="truncate">{name}</span>
+                          <span className="flex items-center gap-2 shrink-0">
+                            <span className={`w-2 h-2 rounded-full ${statusColor}`} aria-hidden />
+                            <span className="truncate text-white/50 max-w-[120px]">
+                              {lifecycle || '—'}
+                            </span>
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p className="mt-1 text-[11px] text-white/30">
+                    {portfoliosProjectCount} total projects
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
