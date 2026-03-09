@@ -3,6 +3,7 @@ import { useContextStore } from '../../stores/contextStore'
 import { useConnectionStore } from '../../stores/connectionStore'
 import { useBoardStore } from '../../stores/boardStore'
 import { usePlanStore } from '../../stores/planStore'
+import { usePortfoliosStore } from '../../stores/portfoliosStore'
 import { useSendPlanToFalcon } from '../../hooks/useSendPlanToFalcon'
 import FalconAILoading from '../shared/FalconAILoading'
 
@@ -19,6 +20,10 @@ export default function Step5_Review() {
   const selected = getSelectedBoards()
   const lastSentPlanPayload = usePlanStore((s) => s.lastSentPlanPayload)
   const lastFalconPlanResponseText = usePlanStore((s) => s.lastFalconPlanResponseText)
+  const portfoliosIsConnected = usePortfoliosStore((s) => s.isConnected)
+  const portfoliosInstanceUrl = usePortfoliosStore((s) => s.instanceUrl)
+  const portfoliosStrategyCount = usePortfoliosStore((s) => s.strategyCount)
+  const portfoliosProjectCount = usePortfoliosStore((s) => s.projectCount)
 
   if (planLoading || planError) {
     return (
@@ -52,6 +57,26 @@ export default function Step5_Review() {
         <div className="p-5 rounded-xl bg-[#141414] border border-white/5">
           <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Boards</h2>
           <p className="text-3xl font-thin text-white">{selected.length} of {boards.length} selected</p>
+        </div>
+        <div className="p-5 rounded-xl bg-[#141414] border border-white/5 col-span-2">
+          <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Portfolios Context</h2>
+          {portfoliosIsConnected && lastSentPlanPayload?.portfoliosContext ? (
+            <>
+              <p className="text-sm text-white/60 mb-2">
+                {portfoliosInstanceUrl || 'Instance URL not set'} · {portfoliosStrategyCount} strategy item(s), {portfoliosProjectCount} project(s)
+              </p>
+              <details className="mt-2">
+                <summary className="text-xs text-white/40 cursor-pointer hover:text-white/60">
+                  Show Portfolios context sent to Falcon
+                </summary>
+                <pre className="mt-3 p-4 bg-[#0f0f0f] rounded-lg overflow-auto font-mono text-xs text-white/60 max-h-64 whitespace-pre-wrap">
+                  {lastSentPlanPayload.portfoliosContext.text || '—'}
+                </pre>
+              </details>
+            </>
+          ) : (
+            <p className="text-sm text-white/40">No Portfolios connection configured. Connect from Step 3 to include strategy and project context.</p>
+          )}
         </div>
       </div>
 
