@@ -1,12 +1,16 @@
 import { useUiStore } from '../../stores/uiStore'
 import { useSendPlanToFalcon } from '../../hooks/useSendPlanToFalcon'
 import { usePlanReviewActions } from '../../hooks/usePlanReviewActions'
+import { useConnectionStore } from '../../stores/connectionStore'
+import { usePortfoliosStore } from '../../stores/portfoliosStore'
 
 export default function StepNav() {
   const currentStep = useUiStore((s) => s.currentStep)
   const setStep = useUiStore((s) => s.setStep)
   const { send, loading } = useSendPlanToFalcon()
   const planReview = usePlanReviewActions()
+  const agileplaceConnected = useConnectionStore((s) => s.isConnected)
+  const portfoliosConnected = usePortfoliosStore((s) => s.isConnected)
 
   const footerClass =
     'fixed bottom-0 right-0 left-72 h-16 bg-[#0a0a0a] border-t border-white/5 flex items-center justify-between px-10 z-40'
@@ -81,6 +85,16 @@ export default function StepNav() {
             className={goBtnClass}
           >
             {loading ? 'Sending to Falcon AI…' : 'Send to Falcon AI'}
+          </button>
+        ) : currentStep === 3 ? (
+          <button
+            type="button"
+            onClick={() => setStep(currentStep + 1)}
+            disabled={!agileplaceConnected && !portfoliosConnected}
+            className={primaryBtnClass}
+            title={!agileplaceConnected && !portfoliosConnected ? 'Connect to at least one system' : undefined}
+          >
+            Continue
           </button>
         ) : currentStep < 8 ? (
           <button

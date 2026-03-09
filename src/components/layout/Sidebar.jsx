@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useUiStore } from '../../stores/uiStore'
 import { useContextStore } from '../../stores/contextStore'
 import { useConnectionStore } from '../../stores/connectionStore'
+import { usePortfoliosStore } from '../../stores/portfoliosStore'
 import { useBoardStore } from '../../stores/boardStore'
 import { useLibraryStore } from '../../stores/libraryStore'
 import { usePlanStore } from '../../stores/planStore'
@@ -49,6 +50,7 @@ export default function Sidebar() {
   const originalPlan = usePlanStore((s) => s.originalPlan)
   const agents = useResultsStore((s) => s.agents)
   const demoScript = useResultsStore((s) => s.demoScript)
+  const portfoliosIsConnected = usePortfoliosStore((s) => s.isConnected)
 
   const step6Enabled = !!originalPlan
   const step7And8Enabled = (agents?.length ?? 0) > 0 || !!demoScript
@@ -85,7 +87,7 @@ export default function Sidebar() {
       { label: 'Demo Context', complete: cc.length > 0 },
       { label: 'Demo Objectives', complete: dobj.length > 0 },
       { label: 'Supporting Files', complete: refCount > 0 },
-      { label: 'Planview Live Data', complete: totalBoards > 0 },
+      { label: `Planview Live Data${portfoliosIsConnected ? ' (Portfolios connected)' : ''}`, complete: totalBoards > 0 || portfoliosIsConnected },
       { label: 'Anvi Context', complete: librarySelected > 0 },
       { label: 'Custom Instructions', complete: custom.length > 0 },
     ]

@@ -40,7 +40,7 @@ Each step in **## Instructions** must be a **complete sentence** (or short parag
 3. **Use only documented operations, expressed as chat prompts.**  
    Each agent's instructions must be **natural language chat prompts** (complete sentences) that an SC can paste into Anvi's chat, using **only** capabilities documented in the capability files.  
    - If the capability files describe card creation (e.g. AgilePlace), write prompts like: "Create a new Epic card titled '…' on board X in the Inbound lane." Use **real** board IDs, card type names, and lane names from the payload.  
-   - If the capability files describe read/query operations (e.g. Portfolios), write prompts that ask Anvi to run those queries in plain language.  
+   - If the capability files describe read/query operations (e.g. Portfolios), write prompts that ask Anvi to run those queries in plain language, referencing specific strategy themes, initiatives, and projects from the Portfolios context in the payload. At least one agent should explicitly highlight alignment between board-level work and organizational strategy.
    **No bracket notation, arrows, or pseudo-code** — only copy-pasteable chat text.
 
 4. **Reference real IDs from the payload.**  

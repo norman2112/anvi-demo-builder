@@ -1,7 +1,8 @@
-import { useConnectionStore } from '../stores/connectionStore'
 import { useContextStore } from '../stores/contextStore'
 import { useBoardStore } from '../stores/boardStore'
 import { useLibraryStore } from '../stores/libraryStore'
+import { usePortfoliosStore } from '../stores/portfoliosStore'
+import { formatStrategyHierarchy, formatProjectPortfolio } from '../utils/portfoliosFormatter'
 
 const PLACEHOLDER_PATTERN = /placeholder|replace with actual/i
 
@@ -39,9 +40,28 @@ export function buildContextPayload() {
   const { companyContext, demoObjectives, refFiles, customInstructions } = useContextStore.getState()
   const boards = useBoardStore.getState().getSelectedBoards()
   const libraryFiles = useLibraryStore.getState().files
+  const portfolios = usePortfoliosStore.getState()
   const selectedLibrary = Object.entries(libraryFiles || {})
     .filter(([, f]) => f?.selected)
     .map(([id, f]) => ({ id, name: f?.name, content: f?.content }))
+
+  let portfoliosContext = null
+  if (portfolios?.isConnected && (portfolios.strategyData || portfolios.projectData)) {
+    const strategy = formatStrategyHierarchy(portfolios.strategyData)
+    const projects = formatProjectPortfolio(portfolios.projectData)
+    const sections = [strategy.text, projects.text].filter(Boolean)
+    const fullText =
+      sections.length > 0
+        ? [strategy.text || '', projects.text || ''].filter(Boolean).join('\n\n')
+        : ''
+
+    portfoliosContext = {
+      instanceUrl: portfolios.instanceUrl || '',
+      strategyItemsCount: strategy.count,
+      projectItemsCount: projects.count,
+      text: fullText,
+    }
+  }
 
   return {
     companyContext: companyContext || '',
@@ -50,6 +70,7 @@ export function buildContextPayload() {
     selectedBoards: boards,
     contextLibrary: selectedLibrary,
     customInstructions: customInstructions || '',
+    portfoliosContext,
   }
 }
 

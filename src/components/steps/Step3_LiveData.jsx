@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Checkbox from '../shared/Checkbox'
 import { toast } from 'sonner'
 import { useConnectionStore } from '../../stores/connectionStore'
+import { usePortfoliosStore } from '../../stores/portfoliosStore'
 import { useBoardStore } from '../../stores/boardStore'
 import { useUiStore } from '../../stores/uiStore'
 import { discoverEnvironment } from '../../services/agileplace'
@@ -30,6 +31,23 @@ export default function Step3_LiveData() {
   const [selectedEnvId, setSelectedEnvId] = useState('')
   const [showSaveEnvPrompt, setShowSaveEnvPrompt] = useState(false)
   const [saveEnvName, setSaveEnvName] = useState('')
+
+  const portfoliosInstanceUrl = usePortfoliosStore((s) => s.instanceUrl)
+  const portfoliosUsername = usePortfoliosStore((s) => s.username)
+  const portfoliosPassword = usePortfoliosStore((s) => s.password)
+  const setPortfoliosInstanceUrl = usePortfoliosStore((s) => s.setInstanceUrl)
+  const setPortfoliosUsername = usePortfoliosStore((s) => s.setUsername)
+  const setPortfoliosPassword = usePortfoliosStore((s) => s.setPassword)
+  const portfoliosIsConnected = usePortfoliosStore((s) => s.isConnected)
+  const setPortfoliosConnectionResult = usePortfoliosStore((s) => s.setConnectionResult)
+  const disconnectPortfolios = usePortfoliosStore((s) => s.disconnect)
+  const portfoliosStrategyCount = usePortfoliosStore((s) => s.strategyCount)
+  const portfoliosProjectCount = usePortfoliosStore((s) => s.projectCount)
+  const portfoliosLastError = usePortfoliosStore((s) => s.lastError)
+
+  const [activeTab, setActiveTab] = useState('agileplace')
+  const [portfoliosLoading, setPortfoliosLoading] = useState(false)
+  const [portfoliosStatus, setPortfoliosStatus] = useState(null)
 
   useEffect(() => {
     setSavedEnvs(getEnvironments())
@@ -120,78 +138,200 @@ export default function Step3_LiveData() {
   const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white/80 placeholder-white/20 focus:border-cta-steel focus:ring-1 focus:ring-cta-steel/30 focus:outline-none text-sm transition-all duration-150'
   const labelClass = 'block text-sm font-medium text-white/70 mb-2'
 
+  const TabDot = ({ status }) => {
+    const base = 'w-2 h-2 rounded-full inline-block mr-1'
+    if (status === 'success') return <span className={`${base} bg-pv-grass`} aria-hidden />
+    if (status === 'error') return <span className={`${base} bg-flash-red`} aria-hidden />
+    return <span className={`${base} bg-white/30`} aria-hidden />
+  }
+
+  const agileplaceStatus = isConnected ? 'success' : error ? 'error' : 'idle'
+  const portfoliosStatusType = portfoliosIsConnected
+    ? 'success'
+    : portfoliosLastError
+      ? 'error'
+      : 'idle'
+
+  const handlePortfoliosTestConnection = async () => {
+    const instance = (portfoliosInstanceUrl || '').trim()
+    const user = (portfoliosUsername || '').trim()
+    const pass = (portfoliosPassword || '').trim()
+    if (!instance || !user || !pass) {
+      setPortfoliosStatus('Instance URL, username, and password are required.')
+      setPortfoliosConnectionResult({ isConnected: false, error: 'Instance URL, username, and password are required.' })
+      return
+    }
+    setPortfoliosLoading(true)
+    setPortfoliosStatus('Testing connection…')
+    setPortfoliosConnectionResult({ isConnected: false, error: null })
+    try {
+      const basePayload = { instanceUrl: instance, username: user, password: pass }
+      const stratRes = await fetch('/api/portfolios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...basePayload, entity: 'Strategy_Dimension' }),
+      })
+      const stratBody = await stratRes.json()
+      if (!stratRes.ok) {
+        const msg = stratBody?.error || 'Connection failed'
+        setPortfoliosConnectionResult({ isConnected: false, error: msg })
+        setPortfoliosStatus(msg)
+        toast.error(msg)
+        return
+      }
+      const projRes = await fetch('/api/portfolios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...basePayload, entity: 'PortfolioDashboards_Project_Dimension' }),
+      })
+      const projBody = await projRes.json()
+      if (!projRes.ok) {
+        const msg = projBody?.error || 'Project fetch failed'
+        setPortfoliosConnectionResult({ isConnected: false, error: msg, strategyData: stratBody })
+        setPortfoliosStatus(msg)
+        toast.error(msg)
+        return
+      }
+
+      const strategyItems = Array.isArray(stratBody?.value)
+        ? stratBody.value
+        : Array.isArray(stratBody?.d?.results)
+          ? stratBody.d.results
+          : []
+      const projectItems = Array.isArray(projBody?.value)
+        ? projBody.value
+        : Array.isArray(projBody?.d?.results)
+          ? projBody.d.results
+          : []
+
+      setPortfoliosConnectionResult({
+        isConnected: true,
+        error: null,
+        strategyData: stratBody,
+        projectData: projBody,
+        strategyCount: strategyItems.length,
+        projectCount: projectItems.length,
+      })
+      const totalStrategies = strategyItems.length
+      setPortfoliosStatus(`Connected — ${totalStrategies} strategy item(s) found`)
+      toast.success('Connected to Portfolios')
+    } catch (err) {
+      console.error('[Step3 Portfolios] Error testing connection', err)
+      const message = err?.message || 'Could not reach Portfolios instance'
+      setPortfoliosConnectionResult({ isConnected: false, error: message })
+      setPortfoliosStatus(message)
+      toast.error(message)
+    } finally {
+      setPortfoliosLoading(false)
+    }
+  }
+
+  const handlePortfoliosDisconnect = () => {
+    disconnectPortfolios()
+    setPortfoliosStatus(null)
+  }
+
   return (
     <div className="space-y-8">
       <h1 className="text-4xl font-thin text-white tracking-tight mb-8">Planview Live Data</h1>
 
-      {!isConnected ? (
-        <div className="space-y-6 max-w-lg">
-          <p className="text-sm text-white/60 leading-relaxed">Connect to AgilePlace to discover boards and use live data in your demo.</p>
+      <div className="flex gap-4 border-b border-white/10 mb-6">
+        <button
+          type="button"
+          onClick={() => setActiveTab('agileplace')}
+          className={`pb-3 text-sm font-medium flex items-center gap-1 border-b-2 transition-all duration-150 ${
+            activeTab === 'agileplace'
+              ? 'border-cta-steel text-white'
+              : 'border-transparent text-white/40 hover:text-white/70'
+          }`}
+        >
+          <TabDot status={agileplaceStatus} />
+          AgilePlace
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('portfolios')}
+          className={`pb-3 text-sm font-medium flex items-center gap-1 border-b-2 transition-all duration-150 ${
+            activeTab === 'portfolios'
+              ? 'border-cta-steel text-white'
+              : 'border-transparent text-white/40 hover:text-white/70'
+          }`}
+        >
+          <TabDot status={portfoliosStatusType} />
+          Portfolios
+        </button>
+      </div>
 
-          <div>
-            <label className={labelClass}>Saved Environment or New Connection</label>
-            <div className="flex gap-2 items-center">
-              <select
-                value={selectedEnvId}
-                onChange={(e) => handleSelectSavedEnv(e.target.value || null)}
-                className={`flex-1 ${inputClass}`}
-              >
-                <option value="">— New Connection —</option>
-                {savedEnvs.environments.map((e) => (
-                  <option key={e.id} value={e.id}>{e.name}</option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setSettingsOpen(true)}
-                className="px-4 py-2.5 rounded-lg bg-transparent border border-white/10 text-white/60 hover:text-white hover:border-white/20 text-sm font-medium shrink-0 transition-all duration-150"
-              >
-                Manage in Settings
-              </button>
-            </div>
-            <p className="text-xs text-white/40 mt-1">Choose a saved environment or enter new connection below.</p>
-          </div>
-
-          <div>
-            <label className={labelClass}>Base URL</label>
-            <input
-              type="url"
-              value={localUrl}
-              onChange={(e) => { setLocalUrl(e.target.value); setStatusMessage(null); setError(null); setSelectedEnvId(''); }}
-              placeholder="https://your-instance.agileplace.com"
-              className={inputClass}
-              disabled={loading}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>API token</label>
-            <input
-              type="password"
-              value={localToken}
-              onChange={(e) => { setLocalToken(e.target.value); setStatusMessage(null); setError(null); setSelectedEnvId(''); }}
-              placeholder="Your AgilePlace API token"
-              className={inputClass}
-              disabled={loading}
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleConnect}
-              disabled={loading}
-              className="px-6 py-2.5 rounded-lg bg-cta-steel hover:bg-cta-steel-hover text-white font-medium disabled:opacity-50 transition-all duration-150 hover:scale-[1.01]"
-            >
-              {loading ? 'Connecting…' : 'Connect'}
-            </button>
-          </div>
-          {(statusMessage || error) && (
-            <p className={`text-sm ${error ? 'text-flash-red' : 'text-white/60'}`}>
-              {error || statusMessage}
-            </p>
-          )}
-        </div>
-      ) : (
+      {activeTab === 'agileplace' && (
         <>
+          {!isConnected ? (
+            <div className="space-y-6 max-w-lg">
+              <p className="text-sm text-white/60 leading-relaxed">Connect to AgilePlace to discover boards and use live data in your demo.</p>
+
+              <div>
+                <label className={labelClass}>Saved Environment or New Connection</label>
+                <div className="flex gap-2 items-center">
+                  <select
+                    value={selectedEnvId}
+                    onChange={(e) => handleSelectSavedEnv(e.target.value || null)}
+                    className={`flex-1 ${inputClass}`}
+                  >
+                    <option value="">— New Connection —</option>
+                    {savedEnvs.environments.map((e) => (
+                      <option key={e.id} value={e.id}>{e.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setSettingsOpen(true)}
+                    className="px-4 py-2.5 rounded-lg bg-transparent border border-white/10 text-white/60 hover:text-white hover:border-white/20 text-sm font-medium shrink-0 transition-all duration-150"
+                  >
+                    Manage in Settings
+                  </button>
+                </div>
+                <p className="text-xs text-white/40 mt-1">Choose a saved environment or enter new connection below.</p>
+              </div>
+
+              <div>
+                <label className={labelClass}>Base URL</label>
+                <input
+                  type="url"
+                  value={localUrl}
+                  onChange={(e) => { setLocalUrl(e.target.value); setStatusMessage(null); setError(null); setSelectedEnvId(''); }}
+                  placeholder="https://your-instance.agileplace.com"
+                  className={inputClass}
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>API token</label>
+                <input
+                  type="password"
+                  value={localToken}
+                  onChange={(e) => { setLocalToken(e.target.value); setStatusMessage(null); setError(null); setSelectedEnvId(''); }}
+                  placeholder="Your AgilePlace API token"
+                  className={inputClass}
+                  disabled={loading}
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleConnect}
+                  disabled={loading}
+                  className="px-6 py-2.5 rounded-lg bg-cta-steel hover:bg-cta-steel-hover text-white font-medium disabled:opacity-50 transition-all duration-150 hover:scale-[1.01]"
+                >
+                  {loading ? 'Connecting…' : 'Connect'}
+                </button>
+              </div>
+              {(statusMessage || error) && (
+                <p className={`text-sm ${error ? 'text-flash-red' : 'text-white/60'}`}>
+                  {error || statusMessage}
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
           {showSaveEnvPrompt && (
             <div className="rounded-xl border border-white/10 bg-[#141414] p-5 mb-6">
               <p className="text-sm text-white/70 mb-3">Save this connection? Give it a name to use again from the dropdown.</p>
@@ -271,7 +411,83 @@ export default function Step3_LiveData() {
               })}
             </div>
           )}
+            </>
+          )}
         </>
+      )}
+
+      {activeTab === 'portfolios' && (
+        <div className="space-y-6 max-w-lg">
+          <p className="text-sm text-white/60 leading-relaxed">
+            Connect to Planview Portfolios to pull strategic planning and project portfolio context into the Falcon payload.
+          </p>
+
+          <div>
+            <label className={labelClass}>Instance URL</label>
+            <input
+              type="url"
+              value={portfoliosInstanceUrl}
+              onChange={(e) => setPortfoliosInstanceUrl(e.target.value)}
+              placeholder="https://scdemo520.pvcloud.com"
+              className={inputClass}
+              disabled={portfoliosLoading}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Username</label>
+            <input
+              type="text"
+              value={portfoliosUsername}
+              onChange={(e) => setPortfoliosUsername(e.target.value)}
+              placeholder="plt\\odata"
+              className={inputClass}
+              disabled={portfoliosLoading}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Password</label>
+            <input
+              type="password"
+              value={portfoliosPassword}
+              onChange={(e) => setPortfoliosPassword(e.target.value)}
+              placeholder="Password"
+              className={inputClass}
+              disabled={portfoliosLoading}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handlePortfoliosTestConnection}
+              disabled={portfoliosLoading}
+              className="px-6 py-2.5 rounded-lg bg-cta-steel hover:bg-cta-steel-hover text-white font-medium disabled:opacity-50 transition-all duration-150 hover:scale-[1.01]"
+            >
+              {portfoliosLoading ? 'Testing…' : 'Test Connection'}
+            </button>
+            {portfoliosIsConnected && (
+              <button
+                type="button"
+                onClick={handlePortfoliosDisconnect}
+                className="text-sm text-white/40 hover:text-white/70 transition-all duration-150"
+              >
+                Disconnect
+              </button>
+            )}
+          </div>
+
+          {(portfoliosStatus || portfoliosLastError) && (
+            <p className={`text-sm ${portfoliosLastError ? 'text-flash-red' : 'text-white/60'}`}>
+              {portfoliosLastError || portfoliosStatus}
+            </p>
+          )}
+
+          {portfoliosIsConnected && (
+            <p className="text-xs text-white/40">
+              {portfoliosStrategyCount} strategy item(s), {portfoliosProjectCount} project(s) loaded.
+            </p>
+          )}
+        </div>
       )}
     </div>
   )
