@@ -485,7 +485,7 @@ export default function Step3_LiveData() {
               <label className={labelClass}>Username</label>
               <input
                 type="text"
-                value={portfoliosUsername}
+                value={portfoliosUsername || 'plt\\odata'}
                 onChange={(e) => setPortfoliosUsername(e.target.value)}
                 placeholder="plt\\odata"
                 className={inputClass}
@@ -496,7 +496,7 @@ export default function Step3_LiveData() {
               <label className={labelClass}>Password</label>
               <input
                 type="password"
-                value={portfoliosPassword}
+                value={portfoliosPassword || 'data'}
                 onChange={(e) => setPortfoliosPassword(e.target.value)}
                 placeholder="Password"
                 className={inputClass}
@@ -545,8 +545,8 @@ export default function Step3_LiveData() {
             </div>
 
             {!portfoliosIsConnected || !portfoliosStrategyData || !portfoliosProjectData ? (
-              <div className="flex items-center justify-center h-full min-h-[180px] rounded-lg border border-dashed border-white/10">
-                <p className="text-xs text-white/40 text-center px-4">
+              <div className="flex items-center justify-center h-full min-h-[180px] rounded-xl border border-dashed border-white/10 -m-4">
+                <p className="text-xs text-white/40 text-center px-6">
                   Connect to see a preview of your Portfolios data.
                 </p>
               </div>
