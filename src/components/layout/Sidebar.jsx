@@ -104,9 +104,15 @@ export default function Sidebar() {
   return (
     <div className="p-4 space-y-6">
       <nav className="space-y-1">
-        <p className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">
-          Steps
-        </p>
+        <div className="mb-2 px-4">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-[10px] font-medium text-white/20 uppercase tracking-[0.2em]">
+              Inputs
+            </span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
+        </div>
         {(() => {
           const rendered = []
           steps.forEach(({ num, label }) => {
