@@ -37,6 +37,14 @@ function CircleIcon() {
   )
 }
 
+function StarIcon() {
+  return (
+    <svg className="w-3.5 h-3.5 text-pv-turquoise/60 shrink-0" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+      <path d="M12 3.5l2.47 4.76 5.26.77-3.81 3.71.9 5.24L12 15.98l-4.82 2.53.9-5.24L4.27 9.03l5.26-.77L12 3.5z" />
+    </svg>
+  )
+}
+
 export default function Sidebar() {
   const currentStep = useUiStore((s) => s.currentStep)
   const setStep = useUiStore((s) => s.setStep)
@@ -99,33 +107,55 @@ export default function Sidebar() {
         <p className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">
           Steps
         </p>
-        {steps.map(({ num, label }) => {
-          const disabled =
-            (num === 6 && !step6Enabled) ||
-            ((num === 7 || num === 8) && !step7And8Enabled)
-          const isActive = currentStep === num
-          const isCompleted = num < currentStep && !disabled
-          return (
-            <button
-              key={num}
-              type="button"
-              onClick={() => !disabled && setStep(num)}
-              disabled={disabled}
-              className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-150 flex items-center gap-2 ${
-                isActive
-                  ? 'bg-white/5 text-white border-l-2 border-cta-steel pl-[14px]'
-                  : disabled
-                    ? 'text-white/20 cursor-not-allowed'
-                    : isCompleted
-                      ? 'text-white/60 hover:bg-white/[0.03] hover:text-white/70'
-                      : 'text-white/40 hover:bg-white/[0.03] hover:text-white/60'
-              }`}
-            >
-              {isCompleted ? <CheckIcon /> : null}
-              <span>{num}.</span> {label}
-            </button>
-          )
-        })}
+        {(() => {
+          const rendered = []
+          steps.forEach(({ num, label }) => {
+            const disabled =
+              (num === 6 && !step6Enabled) ||
+              ((num === 7 || num === 8) && !step7And8Enabled)
+            const isActive = currentStep === num
+            const isCompleted = num < currentStep && !disabled
+            const isOutputStep = num >= 6
+
+            if (num === 6) {
+              rendered.push(
+                <div key="outputs-divider" className="mt-3 mb-1 px-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-white/10" />
+                    <span className="text-[10px] font-medium text-white/20 uppercase tracking-[0.2em]">
+                      Outputs
+                    </span>
+                    <div className="flex-1 h-px bg-white/10" />
+                  </div>
+                </div>
+              )
+            }
+
+            rendered.push(
+              <button
+                key={num}
+                type="button"
+                onClick={() => !disabled && setStep(num)}
+                disabled={disabled}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-150 flex items-center gap-2 ${
+                  isActive
+                    ? 'bg-white/5 text-white border-l-2 border-cta-steel pl-[14px]'
+                    : disabled
+                      ? 'text-white/20 cursor-not-allowed'
+                      : isCompleted
+                        ? isOutputStep
+                          ? 'text-pv-turquoise/60 hover:bg-white/[0.03] hover:text-pv-turquoise'
+                          : 'text-white/60 hover:bg-white/[0.03] hover:text-white/70'
+                        : 'text-white/40 hover:bg-white/[0.03] hover:text-white/60'
+                }`}
+              >
+                {isCompleted ? (isOutputStep ? <StarIcon /> : <CheckIcon />) : null}
+                <span>{num}.</span> {label}
+              </button>
+            )
+          })
+          return rendered
+        })()}
       </nav>
       <div className="border-t border-white/5 mt-6 pt-6">
         <p className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">
