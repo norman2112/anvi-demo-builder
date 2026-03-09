@@ -4,15 +4,22 @@ const markdownComponents = {
   h1: ({ node, ...props }) => <h1 className="text-lg font-semibold text-white mt-4 mb-2 first:mt-0" {...props} />,
   h2: ({ node, ...props }) => <h2 className="text-base font-semibold text-white mt-4 mb-2 border-b border-white/5 pb-1" {...props} />,
   h3: ({ node, ...props }) => <h3 className="text-sm font-semibold text-white mt-3 mb-1" {...props} />,
-  p: ({ node, ...props }) => <p className="text-sm text-white/60 mb-2 leading-relaxed" {...props} />,
-  ul: ({ node, ...props }) => <ul className="list-disc list-inside text-sm text-white/60 mb-2 space-y-1 pl-2" {...props} />,
-  ol: ({ node, ...props }) => <ol className="list-decimal list-inside text-sm text-white/60 mb-2 space-y-1 pl-2" {...props} />,
-  li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
+  p: ({ node, ...props }) => <p className="text-sm text-white/60 mb-2 leading-relaxed font-anvi-serif" {...props} />,
+  ul: ({ node, ...props }) => (
+    <ul className="list-disc list-inside text-sm text-white/60 mb-2 space-y-1 pl-2 font-anvi-serif" {...props} />
+  ),
+  ol: ({ node, ...props }) => (
+    <ol className="list-decimal list-inside text-sm text-white/60 mb-2 space-y-1 pl-2 font-anvi-serif" {...props} />
+  ),
+  li: ({ node, ...props }) => <li className="leading-relaxed font-anvi-serif" {...props} />,
   strong: ({ node, ...props }) => <strong className="font-semibold text-white/80" {...props} />,
   code: ({ node, ...props }) => {
     const isBlock = typeof props.children === 'string' && props.children.includes('\n')
     return isBlock ? (
-      <code className="block p-3 rounded bg-[#0f0f0f] text-white/60 font-mono text-xs overflow-x-auto mb-2 whitespace-pre" {...props} />
+      <code
+        className="block p-3 rounded bg-[#0f0f0f] text-white/60 font-mono text-xs overflow-x-auto mb-2 whitespace-pre"
+        {...props}
+      />
     ) : (
       <code className="px-1.5 py-0.5 rounded bg-[#0f0f0f] text-cta-ice font-mono text-xs" {...props} />
     )

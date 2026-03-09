@@ -119,7 +119,21 @@ Purpose: [from approved plan]
 [One prompt per line or step — complete sentences the SC can copy-paste into Anvi's chat. Natural language only; no brackets, arrows, or pseudo-code. Use real IDs/names from the payload.]
 
 ## Demo Script
-[What to say while running this agent]
+[For most agents: what to say while running this agent.]
+
+If the agent name includes "Executive Strategy Briefing Generator", the **Demo Script** section must instead follow this pattern:
+
+- Use **short, glanceable lines**, not long paragraphs.
+- Do **not** tell the presenter to "paste" anything — this agent auto-runs all 5 steps with a single click.
+- The narrator **talks over** the automation as it runs; they are **not** triggering each step manually.
+- Format as a list of pairs: `[What's happening on screen]` + `"What to say"` (in quotes).
+- Follow this specific flow:
+  1. `[Scene-setting about leadership reporting pain]` + `"What to say"` highlighting the manual prep pain point.
+  2. `[SC clicks the agent from the ★ favorites menu to start it]` + a brief line about kicking off an automated executive briefing.
+  3. `[Steps 1–3 auto-run]` + 2–3 short narration lines like `"Watch as Anvi pulls the strategy hierarchy..."`, `"Now it's analyzing health distribution..."`, `"Now linking projects back to strategies..."`.
+  4. `[Step 4 surfaces at-risk strategies/projects]` + a clear callout that this is the "money shot" for leadership.
+  5. `[Step 5 produces the final briefing output]` + a line that lands the "under 60 seconds" payoff.
+  6. `[Close the agent]` + a final value-prop line tying it back to faster, better executive decision-making.
 
 ## Business Value
 [Key value callout for the audience]

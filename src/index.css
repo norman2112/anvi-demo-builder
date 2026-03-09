@@ -28,6 +28,10 @@ button {
   font-family: inherit;
 }
 
+.font-anvi-serif {
+  font-family: "Iowan Old Style", Georgia, "Times New Roman", serif;
+}
+
 /* Colored toasts: error = red, success = green */
 [data-sonner-toaster][data-theme='dark'] [data-sonner-toast][data-type='error'] {
   --error-bg: rgba(226, 37, 27, 0.2);
