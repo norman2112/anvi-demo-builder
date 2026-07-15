@@ -5,18 +5,18 @@ const MODEL = import.meta.env.VITE_FALCON_MODEL || 'us.anthropic.claude-sonnet-4
 const useFalconProxy = !import.meta.env.DEV
 const FALCON_PROXY_URL = '/api/falcon'
 
-/** Dev-only: fallback when nothing is set in Settings (from legacy HTML build). */
-const FALCON_API_KEY_DEFAULT = 'REDACTED_FALCON_KEY'
-
+/** Optional env fallback for local use only — never hardcode a real key. */
 export function getFalconApiKeyDefault() {
-  return import.meta.env.DEV ? (FALCON_API_KEY_DEFAULT || '') : ''
+  if (!import.meta.env.DEV) return ''
+  return (import.meta.env.VITE_FALCON_API_KEY || '').trim()
 }
 
 function getApiKey() {
   if (!import.meta.env.DEV) return null
   const fromStorage = typeof localStorage !== 'undefined' ? localStorage.getItem('anvi-falcon-api-key') : null
   if (fromStorage && fromStorage.trim()) return fromStorage
-  if (FALCON_API_KEY_DEFAULT && FALCON_API_KEY_DEFAULT.trim()) return FALCON_API_KEY_DEFAULT
+  const fromEnv = getFalconApiKeyDefault()
+  if (fromEnv) return fromEnv
   return null
 }
 
