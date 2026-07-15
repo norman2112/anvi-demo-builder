@@ -3,5 +3,9 @@ dist
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
+.vercel
 .DS_Store
 Anvi Agent Builder Overview.mov
+*.rtf

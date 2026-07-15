@@ -38,11 +38,17 @@ export default async function handler(req, res) {
       return
     }
 
-    const base = `https://demo${trimmedInstance}.example.com`.replace(/\/$/, '')
+    const hostTemplate = process.env.PORTFOLIOS_HOST_TEMPLATE || 'https://demo{instance}.example.com'
+    const base = hostTemplate.replace('{instance}', trimmedInstance).replace(/\/$/, '')
     const url = `${base}/odataservice/odataservice.svc/${encodeURIComponent(entity)}?$format=json`
 
-    const username = 'REDACTED_ODATA_USER'
+    const username = process.env.PORTFOLIOS_ODATA_USER || ''
     const password = process.env.PORTFOLIOS_ODATA_PASSWORD || ''
+    if (!username || !password) {
+      res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ error: 'PORTFOLIOS_ODATA_USER / PORTFOLIOS_ODATA_PASSWORD not configured' }))
+      return
+    }
     const auth = Buffer.from(`${username}:${password}`).toString('base64')
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 30_000)

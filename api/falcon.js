@@ -5,7 +5,7 @@
  * Forwards to Falcon AI chat/completions with Authorization: Bearer <key>
  */
 
-const FALCON_URL = 'https://your-instance.example.com/api/v1/chat/completions'
+const FALCON_URL = process.env.FALCON_API_URL || 'https://your-instance.example.com/api/v1/chat/completions'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

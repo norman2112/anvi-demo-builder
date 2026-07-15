@@ -645,37 +645,37 @@ Step 19: Format Summary Report
   ```markdown
   # Q1 2026 OKR Summary - Digital Products Portfolio
   
-  ## Objective 1: [Accelerate Digital Customer Experience](https://portfolios.example.com/okr/obj-789)
+  ## Objective 1: [Accelerate Digital Customer Experience](https://your-instance.example.com/okr/obj-789)
   Timeline: January 1 - March 31, 2026  
   Owner: Digital Products Team  
   Container: Digital Transformation Project
   
   ### Key Results:
-  1. [Increase mobile app engagement rate](https://portfolios.example.com/okr/kr-1001)
+  1. [Increase mobile app engagement rate](https://your-instance.example.com/okr/kr-1001)
      - Baseline: 45% → Target: 65%
      - Current Progress: 45% (0% complete)
   
-  2. [Reduce customer onboarding time](https://portfolios.example.com/okr/kr-1002)
+  2. [Reduce customer onboarding time](https://your-instance.example.com/okr/kr-1002)
      - Baseline: 5 days → Target: 2 days
      - Current Progress: 5 days (0% complete)
   
-  3. [Achieve NPS score of 50+](https://portfolios.example.com/okr/kr-1003)
+  3. [Achieve NPS score of 50+](https://your-instance.example.com/okr/kr-1003)
      - Baseline: 38 → Target: 50
      - Current Progress: 38 (0% complete)
   
   ---
   
-  ## Objective 2: [Modernize Platform Infrastructure](https://portfolios.example.com/okr/obj-790)
+  ## Objective 2: [Modernize Platform Infrastructure](https://your-instance.example.com/okr/obj-790)
   Timeline: January 1 - March 31, 2026  
   Owner: Platform Engineering Team  
   Container: Digital Transformation Project
   
   ### Key Results:
-  1. [Migrate services to cloud](https://portfolios.example.com/okr/kr-1004)
+  1. [Migrate services to cloud](https://your-instance.example.com/okr/kr-1004)
      - Baseline: 30% → Target: 80%
      - Current Progress: 30% (0% complete)
   
-  2. [Reduce system downtime](https://portfolios.example.com/okr/kr-1005)
+  2. [Reduce system downtime](https://your-instance.example.com/okr/kr-1005)
      - Baseline: 4 hours/month → Target: 1 hour/month
      - Current Progress: 4 hours (0% complete)
   

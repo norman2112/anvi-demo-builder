@@ -229,8 +229,8 @@ export default function Step3_LiveData() {
         projectCount: projectItems.length,
       })
       const totalStrategies = strategyItems.length
-      setPortfoliosStatus(`Connected to demo${instanceNumber} — ${totalStrategies} strategy item(s), ${projectItems.length} project(s) loaded`)
-      toast.success(`Connected to demo${instanceNumber}`)
+      setPortfoliosStatus(`Connected to demo instance ${instanceNumber} — ${totalStrategies} strategy item(s), ${projectItems.length} project(s) loaded`)
+      toast.success(`Connected to demo instance ${instanceNumber}`)
     } catch (err) {
       console.error('[Step3 Portfolios] Error testing connection', err)
       const message = err?.message || 'Could not reach Portfolios instance'
@@ -495,7 +495,7 @@ export default function Step3_LiveData() {
                 disabled={portfoliosLoading}
               />
               <p className="text-xs text-white/40 mt-1">
-                Enter your demo instance number (e.g. 520 for demo520).
+                Enter your demo instance number (configured via server env).
               </p>
             </div>
 

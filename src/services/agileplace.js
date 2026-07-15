@@ -1,7 +1,7 @@
 import { proxyFetch } from './proxy.js'
 
 /**
- * LeanKit API (apiDocs.md): base https://<host>.leankit.com/io/
+ * Work board API: base https://<host>.example.com/io/
  * List all boards: GET /io/board  → returns id, title, etc. (no cardTypes/lanes).
  * Board details: GET /io/board/:boardId → returns cardTypes, lanes, etc.
  */

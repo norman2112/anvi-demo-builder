@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_FALCON_API_URL || 'https://your-instance.example.com/api/v1/chat/completions'
+const API_URL = import.meta.env.VITE_FALCON_API_URL || ''
 const MODEL = import.meta.env.VITE_FALCON_MODEL || 'us.anthropic.claude-sonnet-4-5-20250929-v1:0'
 
 /** In production we call /api/falcon (key server-side). In dev we use localStorage key for local testing. */

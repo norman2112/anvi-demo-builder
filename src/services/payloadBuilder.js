@@ -56,7 +56,8 @@ export function buildContextPayload() {
         : ''
 
     const instanceNumber = portfolios.instanceNumber || ''
-    const instanceUrl = instanceNumber ? `https://demo${instanceNumber}.example.com` : ''
+    const hostTemplate = import.meta.env.VITE_PORTFOLIOS_HOST_TEMPLATE || 'https://demo{instance}.example.com'
+    const instanceUrl = instanceNumber ? hostTemplate.replace('{instance}', instanceNumber) : ''
 
     portfoliosContext = {
       instanceUrl,

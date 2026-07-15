@@ -1,113 +1,139 @@
-# Anvi Agent Builder
+# AI Demo Prep Pipeline
 
-A modern React application that generates AI-powered demo agents for Planview AgilePlace and Portfolios demonstrations. Built for Solution Consultants to rapidly create compelling, context-aware demos without deep technical expertise.
+An AI-powered tool that turns public company context and live platform data into customer-specific demo agents, talk tracks, and bench-ready demo environments — cutting enterprise demo prep from days to minutes.
 
-## What It Does
+## The Problem
 
-1. **Capture context** — Company details, demo objectives, supporting files, live board data
-2. **Generate a plan** — Falcon AI analyzes your context and proposes a sequence of demo agents
-3. **Review & customize** — Toggle agents on/off, add notes, adjust the strategy
-4. **Generate agents** — Each agent contains copy-paste Anvi chat prompts with real board IDs, card types, and lane references
-5. **Present with confidence** — Auto-generated demo script with talk track, business value callouts, and transitions
+Enterprise software demos are high-stakes and high-effort. Before a prospect meeting, a solutions consultant typically spends **3–5 days** manually:
+
+- Researching the account (10-Ks, earnings, org structure, tooling)
+- Hand-crafting AI agent prompts tailored to that company's language and pain
+- Wiring those agents to real board/portfolio data in a demo tenant
+- Writing a presenter script with transitions and business-value callouts
+
+Most of that work is repetitive, fragile, and hard to reuse. The result is demos that either feel generic or take too long to build.
+
+## The Solution
+
+This app is a guided, eight-step pipeline that:
+
+1. Captures **company context** and demo objectives (or uses fictional prefills for local testing)
+2. Optionally pulls **live work-management / portfolio data** from a target tenant
+3. Loads capability docs that teach the LLM what the target AI assistant can and cannot do
+4. Runs a **two-pass LLM pipeline** — plan first, then full agent generation after human review
+5. Emits **copy-paste-ready agents** plus a presenter **demo script**
+
+Public company context (filings, org patterns, industry language) replaces the need for confidential customer-provided data during demo prep.
+
+## Architecture
+
+```
+Discovery inputs
+  → Company context + objectives (+ optional reference files)
+  → Live board / portfolio context (optional)
+  → Capability library (what the AI assistant can do)
+  → LLM Pass 1: demo plan (agent names, purposes, key actions)
+  → Human review (toggle agents, notes, strategy)
+  → LLM Pass 2: full executable agents grounded in live IDs
+  → Demo script generation
+  → Bench test → Deliver
+```
+
+**Pass 1** optimizes for structure and reviewability. **Pass 2** optimizes for executable specificity (board IDs, card types, lane names, portfolio hierarchy). Separating them keeps humans in the loop before expensive, detailed generation.
+
+Optional MCP / API proxy layers keep platform tokens server-side (Vercel serverless routes under `/api/*`).
 
 ## Tech Stack
 
 | Layer | Choice |
 |-------|--------|
-| Framework | React 18 + Vite |
-| Styling | Tailwind CSS (custom Planview dark theme) |
-| State | Zustand |
+| UI | React 18 + Vite |
+| Styling | Tailwind CSS |
+| State | Zustand (persisted where useful) |
 | Animation | Framer Motion |
-| Font | Inter |
-| Hosting | Vercel (static + serverless proxy) |
+| Markdown | react-markdown |
+| Hosting | Vercel (static SPA + serverless proxies) |
+| LLM | Claude via a chat-completions-compatible API |
+| Platform I/O | Serverless proxies for work boards + portfolio OData |
 
-## Getting Started
+## Key Design Decisions
 
-### Local Development
+- **Two LLM passes instead of one** — Plans are cheap to review and revise. Full agents are large and brittle; generating them only after approval saves tokens and avoids regenerating junk.
+- **Zustand over Redux** — Small surface area, no boilerplate, easy persistence for connection prefs and library selection. Enough structure without ceremony.
+- **Server-side proxies for credentials** — API keys for the LLM and demo tenants stay in env vars / serverless handlers, not the client bundle.
+- **Capability docs as context** — Shipping limitation + capability markdown into the prompt makes generation respect real platform constraints instead of inventing tools.
+- **Public context over private data** — Demos are built from narrative company context and tenant demo data, not confidential customer exports.
+
+## Setup
+
+### Prerequisites
+
+- Node 18+
+- An LLM API key (chat-completions compatible)
+- Optional: credentials for a demo work-management / portfolio tenant
+
+### Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-App runs at `http://localhost:5173`
+App runs at `http://localhost:5173`.
 
-### AgilePlace Proxy (Local Dev)
+### Environment variables
 
-For local development, the proxy server forwards API calls to AgilePlace:
+**Client (Vite)** — never put secrets in `VITE_*` vars:
 
 ```bash
-node proxy-server.js
+VITE_FALCON_API_URL=https://your-instance.example.com/api/v1/chat/completions
+VITE_FALCON_MODEL=your-model-id
+VITE_PROXY_URL=http://localhost:3000
+VITE_PORTFOLIOS_HOST_TEMPLATE=https://demo{instance}.example.com
 ```
 
-Proxy runs at `http://localhost:3000`
+**Server (Vercel / local serverless)** — secrets stay here:
 
-In production (Vercel), the proxy is handled by `/api/proxy.js` serverless function — no local proxy needed.
-
-### Falcon AI Key
-
-Set your Falcon AI API key in the Settings panel (gear icon), or via browser console:
-
-```js
-localStorage.setItem('anvi-falcon-api-key', 'your-key-here')
+```bash
+FALCON_API_KEY=your-key-here
+FALCON_API_URL=https://your-instance.example.com/api/v1/chat/completions
+PORTFOLIOS_HOST_TEMPLATE=https://demo{instance}.example.com
+PORTFOLIOS_ODATA_USER=
+PORTFOLIOS_ODATA_PASSWORD=
 ```
 
-## Architecture
+In local dev, you can also paste an LLM API key in the in-app Settings panel (stored in `localStorage` only on your machine).
+
+### Production
+
+```bash
+npm run build
+```
+
+Deploy the `dist/` output plus `/api/*` serverless functions to Vercel. Set the server env vars in the Vercel project settings — do not commit them.
+
+## Project structure
 
 ```
 src/
-├── stores/          # Zustand state (connection, context, board, plan, results, UI)
-├── services/        # Pure functions (Falcon AI, AgilePlace API, payload builder, parsers)
-├── components/      # React components (37 total)
-│   ├── layout/      # Header, Sidebar, StepNav
-│   ├── steps/       # 8-step wizard (Steps 1-8)
-│   ├── plan-review/ # Agent cards, detail panel, strategy notes
-│   ├── agents/      # Generated agent display
-│   ├── script/      # Demo script sections, callouts
-│   ├── connection/  # Connection modal, status chip
-│   └── shared/      # Buttons, toggles, file upload, loading states
-├── config/          # Prompts, settings, capability files
-│   └── capabilities/  # Anvi capability docs (AgilePlace, Portfolios)
-└── utils/           # Token estimator, file reader, helpers
+├── stores/          # Zustand state
+├── services/        # LLM client, payload builders, parsers, validation
+├── components/      # Layout, 8-step wizard, plan review, agents, script
+├── config/          # Prompts + capability markdown
+├── hooks/           # Pass 1 / Pass 2 orchestration
+└── utils/           # Storage helpers, estimators
+api/
+├── falcon.js        # LLM proxy (key server-side)
+├── proxy.js         # Work-board API CORS proxy
+└── portfolios.js    # Portfolio OData proxy
 ```
 
-## 8-Step Workflow
+## Background
 
-1. **Demo Context** — Describe the company, product, and audience
-2. **Supporting Files** — Upload RFPs, workflow guides, org charts
-3. **Planview Live Data** — Connect to AgilePlace, select boards
-4. **Anvi Context** — Select Anvi capability files (AgilePlace / Portfolios)
-5. **Review & Send** — Review payload, send to Falcon AI (Pass 1)
-6. **Plan Review** — Review proposed agents, toggle, add notes, approve
-7. **Generated Agents** — Copy-paste ready Anvi chat prompts (Pass 2)
-8. **Demo Script** — Presenter talk track with transitions and callouts
+Built while supporting a presales / solutions consulting team that needed faster, more customer-specific AI demos. The goal was to productize the pattern of "research → plan → generate → bench" so consultants could ship higher-quality demos without writing prompts from scratch every time.
 
-## Key Concepts
-
-**Context-primacy architecture** — The same company gets different demos based on uploaded materials, not generic industry templates. Board IDs, card types, and lane structures drive agent generation.
-
-**Two-pass generation** — Pass 1 generates a plan (agent names + purposes). The SC reviews and customizes. Pass 2 generates full executable agents based on the approved plan.
-
-**Capability-agnostic** — AgilePlace capability files produce card-creation agents. Portfolios capability files produce query/analysis agents. The system adapts to whatever capabilities are loaded.
-
-## Deployment
-
-Hosted on Vercel. Push to `main` triggers auto-deploy.
-
-```bash
-git add .
-git commit -m "your message"
-git push
-```
-
-## Environment
-
-| Service | URL |
-|---------|-----|
-| Falcon AI | `https://your-instance.example.com/api/v1/chat/completions` |
-| Model | `us.anthropic.claude-sonnet-4-5-20250929-v1:0` |
-| AgilePlace | Via `/api/proxy` serverless function |
+Qualitative impact: same-day demo turnaround for standard account prep, consistent agent quality across the team, and a repeatable human-in-the-loop review step before anything touched a demo tenant.
 
 ---
 
-Built with 🏍️ by the Planview SC team.
+Built as a portfolio project documenting AI-assisted enterprise demo preparation.

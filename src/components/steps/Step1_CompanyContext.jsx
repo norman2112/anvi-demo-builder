@@ -25,15 +25,15 @@ Demonstrate SAFe PI Planning at scale:
 4. Show risk board with mitigation plans
 5. Demonstrate capacity planning across teams
 
-Success criteria: They see how AgilePlace eliminates the "sticky note wall" chaos and provides digital PI Planning board with real-time updates.`
+Success criteria: They see how the work management board eliminates the "sticky note wall" chaos and provides a digital PI Planning board with real-time updates.`
 
 const PREFILL_SPM_CONTEXT = `Company Context:
-Apex Financial Group — $200B+ asset regional bank, HQ Columbus OH. 
+Apex Financial Group — $200B+ asset regional bank.
 Key exec audience: SVP of Enterprise PMO (reports to CIO).
 
-Apex Financial Group runs a centralized EPMO managing 400+ active projects across 
+Apex runs a centralized EPMO managing 400+ active projects across 
 Digital Banking, Commercial Lending, Risk & Compliance, and Infrastructure 
-Modernization. They use Planview Portfolios for strategic planning and 
+Modernization. They use a strategic portfolio management platform for planning and 
 project intake. Current pain: manual weekly status rollups take the PMO 
 team 6+ hours every Monday. CIO wants real-time strategy-to-execution 
 visibility without the spreadsheet heroics.
@@ -42,14 +42,14 @@ Recent strategic priorities:
 - Digital-first customer experience (mobile banking overhaul)
 - AI/ML fraud detection and credit decisioning
 - Core banking platform modernization (mainframe migration)
-- Regulatory compliance automation (OCC/Fed requirements)
+- Regulatory compliance automation
 - Branch network optimization and hybrid workforce enablement
 
 Target demo persona: SVP of Enterprise PMO + Director of Portfolio Analytics
 Demo tone: Executive, data-driven, ROI-focused. No fluff.`
 
 const PREFILL_SPM_OBJECTIVES = `Demo Objectives:
-Show Apex Financial Group's EPMO leadership how Anvi + Portfolios can:
+Show Apex Financial Group's EPMO leadership how AI agents + portfolio data can:
 1. Auto-generate executive strategy briefings from live portfolio data
 2. Surface at-risk initiatives before they hit the CIO's desk
 3. Demonstrate strategy-to-execution traceability (strategic themes → projects → board work)
