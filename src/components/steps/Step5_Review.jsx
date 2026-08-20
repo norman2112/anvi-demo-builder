@@ -3,6 +3,7 @@ import { useContextStore } from '../../stores/contextStore'
 import { useConnectionStore } from '../../stores/connectionStore'
 import { useBoardStore } from '../../stores/boardStore'
 import { usePlanStore } from '../../stores/planStore'
+import { usePortfoliosStore } from '../../stores/portfoliosStore'
 import { useSendPlanToFalcon } from '../../hooks/useSendPlanToFalcon'
 import FalconAILoading from '../shared/FalconAILoading'
 
@@ -17,6 +18,8 @@ export default function Step5_Review() {
   const boards = useConnectionStore((s) => s.boards)
   const getSelectedBoards = useBoardStore((s) => s.getSelectedBoards)
   const selected = getSelectedBoards()
+  const portfoliosStrategyCount = usePortfoliosStore((s) => s.strategyCount)
+  const portfoliosProjectCount = usePortfoliosStore((s) => s.projectCount)
   const lastSentPlanPayload = usePlanStore((s) => s.lastSentPlanPayload)
   const lastFalconPlanResponseText = usePlanStore((s) => s.lastFalconPlanResponseText)
 
